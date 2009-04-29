@@ -23,18 +23,18 @@
 %undefine	with_xpp
 %endif
 
-%define		rel	11
+%define		rel	1
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
 Summary(pl.UTF-8):	Obsługa urządzeń telefonicznych DAHDI
 Name:		%{pname}%{_alt_kernel}
-Version:	2.1.0.3
+Version:	2.1.0.4
 Release:	%{rel}%{?with_bristuff:.bristuff}
 License:	GPL
 Group:		Base/Kernel
-Source0:	http://downloads.digium.com/pub/telephony/dahdi-linux/dahdi-linux-2.1.0.3.tar.gz
-# Source0-md5:	4e2a294073a1375b8b3d33bbf4f607fe
+Source0:	http://downloads.digium.com/pub/telephony/dahdi-linux/dahdi-linux-%{version}.tar.gz
+# Source0-md5:	ef2d34c394e8b600ad392560efc56920
 Source3:	%{FIRMWARE_URL}/dahdi-fw-oct6114-064-1.05.01.tar.gz
 # Source3-md5:	88db9b7a07d8392736171b1b3e6bcc66
 Source4:	%{FIRMWARE_URL}/dahdi-fw-oct6114-128-1.05.01.tar.gz
@@ -165,6 +165,7 @@ rm -rf $RPM_BUILD_ROOT
 %depmod %{_kernel_ver}
 
 %files devel
+%defattr(644,root,root,755)
 %{_includedir}/dahdi
 
 %files -n kernel%{_alt_kernel}-%{pname}
