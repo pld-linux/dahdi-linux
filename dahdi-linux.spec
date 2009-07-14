@@ -61,10 +61,10 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 # - keep X and X_in in sync
 # - X is used for actual building (entries separated with space), X_in for pld macros (entries separated with comma)
 
-%define	modules_1	dahdi.o dahdi_dynamic_eth.o dahdi_dynamic_loc.o pciradio.o tor2.o wcfxo.o wct1xxp.o wctdm.o wcte11xp.o dahdi_dummy.o dahdi_dynamic.o dahdi_echocan_jpah.o dahdi_echocan_kb1.o dahdi_echocan_mg2.o dahdi_echocan_sec.o dahdi_echocan_sec2.o
-%define	modules_1_in	dahdi,dahdi_dynamic_eth,dahdi_dynamic_loc,pciradio,tor2,wcfxo,wct1xxp,wctdm,wcte11xp,dahdi_dummy,dahdi_dynamic,dahdi_echocan_jpah,dahdi_echocan_kb1,dahdi_echocan_mg2,dahdi_echocan_sec,dahdi_echocan_sec2
-%define	modules_2	voicebuss/ wct4xxp/ wcte12xp/ %{?with_xpp:xpp/}
-%define	modules_2_in	voicebus/dahdivoicebus,wct4xxp/wct4xxp,wcte12xp/wcte12xp%{?with_xpp:,xpp/{%{?with_bristuff:xpd_bri,}xpd_fxo,xpd_fxs,xpd_pri,xpp,xpp_usb}}
+%define	modules_1	dahdi.o dahdi_dynamic.o dahdi_dynamic_eth.o dahdi_dynamic_loc.o dahdi_dummy.o dahdi_echocan_jpah.o dahdi_echocan_kb1.o dahdi_echocan_mg2.o dahdi_echocan_sec.o dahdi_echocan_sec2.o pciradio.o tor2.o wcfxo.o wct1xxp.o wctdm.o wcte11xp.o 
+%define	modules_1_in	dahdi,dahdi_dynamic,dahdi_dynamic_eth,dahdi_dynamic_loc,dahdi_dummy,dahdi_echocan_jpah,dahdi_echocan_kb1,dahdi_echocan_mg2,dahdi_echocan_sec,dahdi_echocan_sec2,pciradio,tor2,wcfxo,wct1xxp,wctdm,wcte11xp
+%define	modules_2	voicebuss wct4xxp/ wcte12xp/ %{?with_xpp:xpp/}
+%define	modules_2_in	voicebus/dahdi_voicebus,wct4xxp/wct4xxp,wcte12xp/wcte12xp,%{?with_xpp:%{?with_bristuff:xpp/xpd_bri,}xpp/xpd_fxo,xpp/xpd_fxs,xpp/xpd_pri,xpp/xpp,xpp/xpp_usb}
 %ifnarch alpha
 %define	modules_nalpha	wctc4xxp/ wctdm24xxp/ dahdi_transcode.o wcb4xxp/
 %define	modules_nalpha_in	wctc4xxp/wctc4xxp,wctdm24xxp/wctdm24xxp,dahdi_transcode,wcb4xxp/wcb4xxp
