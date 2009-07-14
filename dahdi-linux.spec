@@ -23,18 +23,18 @@
 %undefine	with_xpp
 %endif
 
-%define		rel	1
+%define		rel	0.1
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
 Summary(pl.UTF-8):	Obsługa urządzeń telefonicznych DAHDI
 Name:		%{pname}%{_alt_kernel}
-Version:	2.1.0.4
+Version:	2.2.0.1
 Release:	%{rel}%{?with_bristuff:.bristuff}
 License:	GPL
 Group:		Base/Kernel
 Source0:	http://downloads.digium.com/pub/telephony/dahdi-linux/dahdi-linux-%{version}.tar.gz
-# Source0-md5:	ef2d34c394e8b600ad392560efc56920
+# Source0-md5:	824919c1ee040a3c1999b4f70dd17c4a
 Source3:	%{FIRMWARE_URL}/dahdi-fw-oct6114-064-1.05.01.tar.gz
 # Source3-md5:	88db9b7a07d8392736171b1b3e6bcc66
 Source4:	%{FIRMWARE_URL}/dahdi-fw-oct6114-128-1.05.01.tar.gz
@@ -63,8 +63,8 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %define	modules_1	dahdi.o dahdi_dynamic_eth.o dahdi_dynamic_loc.o pciradio.o tor2.o wcfxo.o wct1xxp.o wctdm.o wcte11xp.o dahdi_dummy.o dahdi_dynamic.o dahdi_echocan_jpah.o dahdi_echocan_kb1.o dahdi_echocan_mg2.o dahdi_echocan_sec.o dahdi_echocan_sec2.o
 %define	modules_1_in	dahdi,dahdi_dynamic_eth,dahdi_dynamic_loc,pciradio,tor2,wcfxo,wct1xxp,wctdm,wcte11xp,dahdi_dummy,dahdi_dynamic,dahdi_echocan_jpah,dahdi_echocan_kb1,dahdi_echocan_mg2,dahdi_echocan_sec,dahdi_echocan_sec2
-%define	modules_2	wct4xxp/ wcte12xp/ %{?with_xpp:xpp/}
-%define	modules_2_in	wct4xxp/wct4xxp,wcte12xp/wcte12xp%{?with_xpp:,xpp/{%{?with_bristuff:xpd_bri,}xpd_fxo,xpd_fxs,xpd_pri,xpp,xpp_usb}}
+%define	modules_2	voicebuss/ wct4xxp/ wcte12xp/ %{?with_xpp:xpp/}
+%define	modules_2_in	voicebus/dahdivoicebus,wct4xxp/wct4xxp,wcte12xp/wcte12xp%{?with_xpp:,xpp/{%{?with_bristuff:xpd_bri,}xpd_fxo,xpd_fxs,xpd_pri,xpp,xpp_usb}}
 %ifnarch alpha
 %define	modules_nalpha	wctc4xxp/ wctdm24xxp/ dahdi_transcode.o wcb4xxp/
 %define	modules_nalpha_in	wctc4xxp/wctc4xxp,wctdm24xxp/wctdm24xxp,dahdi_transcode,wcb4xxp/wcb4xxp
