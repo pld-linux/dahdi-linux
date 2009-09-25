@@ -15,7 +15,7 @@
 %undefine	with_xpp
 %endif
 
-%define		rel	1
+%define		rel	2
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
@@ -82,6 +82,19 @@ Group:		Development/Libraries
 %description devel
 Header files for dahdi interface.
 
+%package udev
+Summary:	udev rules for DAHDI kernel modules
+Summary(pl.UTF-8):	Reguły udev dla modułów jądra Linuksa dla DAHDI
+Release:	%{rel}
+Group:		Base/Kernel
+Requires:	udev-core
+
+%description udev
+udev rules for DAHDI kernel modules.
+
+%description udev -l pl.UTF-8
+Reguły udev dla modułów jądra Linuksa dla DAHDI.
+
 %package -n kernel%{_alt_kernel}-%{pname}
 Summary:	DAHDI Linux kernel driver
 Summary(pl.UTF-8):	Sterownik DAHDI dla jądra Linuksa
@@ -142,7 +155,12 @@ cd drivers/dahdi
 %install_kernel_modules -m %{modules_in} -d misc
 cd ../..
 
-install include/dahdi/*.h $RPM_BUILD_ROOT%{_includedir}/dahdi/
+install -d $RPM_BUILD_ROOT/etc/udev/rules.d
+
+%{make} \
+	DESTDIR=$RPM_BUILD_ROOT \
+	install-devices \
+	install-include
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -156,6 +174,11 @@ rm -rf $RPM_BUILD_ROOT
 %files devel
 %defattr(644,root,root,755)
 %{_includedir}/dahdi
+
+%files udev
+%defattr(644,root,root,755)
+%config(noreplace) %verify(not md5 mtime size) /etc/udev/rules.d/dahdi.rules
+%config(noreplace) %verify(not md5 mtime size) /etc/udev/rules.d/xpp.rules
 
 %files -n kernel%{_alt_kernel}-%{pname}
 %defattr(644,root,root,755)
