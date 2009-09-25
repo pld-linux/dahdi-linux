@@ -14,7 +14,12 @@
 %bcond_without	dist_kernel	# without distribution kernel
 %bcond_with	oslec		# with Open Source Line Echo Canceller
 %bcond_without	xpp		# without Astribank
+%bcond_without	userspace	# don't build userspace packages
 %bcond_with	verbose
+
+%if "%{_alt_kernel}" != "%{nil}"
+%undefine	with_userspace
+%endif
 
 %ifarch sparc
 %undefine	with_smp
@@ -23,7 +28,7 @@
 %undefine	with_xpp
 %endif
 
-%define		rel	2
+%define		rel	3
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
@@ -164,12 +169,14 @@ cd drivers/dahdi
 %install_kernel_modules -m %{modules_in} -d misc
 cd ../..
 
+%if %{with userspace}
 install -d $RPM_BUILD_ROOT/etc/udev/rules.d
 
 %{make} \
 	DESTDIR=$RPM_BUILD_ROOT \
 	install-devices \
 	install-include
+%endif
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -180,6 +187,7 @@ rm -rf $RPM_BUILD_ROOT
 %postun -n kernel%{_alt_kernel}-%{pname}
 %depmod %{_kernel_ver}
 
+%if %{with userspace}
 %files devel
 %defattr(644,root,root,755)
 %{_includedir}/dahdi
@@ -188,6 +196,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %config(noreplace) %verify(not md5 mtime size) /etc/udev/rules.d/dahdi.rules
 %config(noreplace) %verify(not md5 mtime size) /etc/udev/rules.d/xpp.rules
+%endif
 
 %files -n kernel%{_alt_kernel}-%{pname}
 %defattr(644,root,root,755)
