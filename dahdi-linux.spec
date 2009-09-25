@@ -1,6 +1,14 @@
 #
 # TODO:
 # - IMPORTANT rename: http://www.asterisk.org/zaptel-to-dahdi
+# - Fix --without xpp:
+#   + check_modules
+#   unpackaged module: drivers/dahdi/xpp/xpd_bri
+#   unpackaged module: drivers/dahdi/xpp/xpd_fxo
+#   unpackaged module: drivers/dahdi/xpp/xpd_fxs
+#   unpackaged module: drivers/dahdi/xpp/xpd_pri
+#   unpackaged module: drivers/dahdi/xpp/xpp
+#   unpackaged module: drivers/dahdi/xpp/xpp_usb
 #
 # Conditional build:
 %bcond_without	dist_kernel	# without distribution kernel
