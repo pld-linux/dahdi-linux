@@ -35,6 +35,7 @@ Source5:	%{FIRMWARE_URL}/dahdi-fw-vpmadt032-1.07.tar.gz
 # Source5-md5:	e1c7231d6225ac999cb18f4e858f66b6
 Source6:	%{FIRMWARE_URL}/dahdi-fw-tc400m-MR6.12.tar.gz
 # Source6-md5:	2ea860bb8a9d8ede2858b9557b74ee3c
+Patch0:		%{pname}-svn-fixes.patch
 URL:		http://www.asterisk.org/
 %if %{with kernel} && %{with dist_kernel}
 BuildRequires:	kernel%{_alt_kernel}-module-build
@@ -101,6 +102,7 @@ Sterownik dla jądra Linuksa do urządzeń telefonicznych DAHDI.
 
 %prep
 %setup -q -n %{pname}-%{version}
+%patch0 -p1
 
 for a in %{SOURCE3} %{SOURCE4} %{SOURCE5} %{SOURCE6}; do
 	ln -s $a drivers/dahdi/firmware
