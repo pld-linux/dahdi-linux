@@ -95,6 +95,7 @@ Summary:	udev rules for DAHDI kernel modules
 Summary(pl.UTF-8):	Reguły udev dla modułów jądra Linuksa dla DAHDI
 Release:	%{rel}
 Group:		Base/Kernel
+Requires:	dahdi-tools >= 2.2.0
 Requires:	udev-core
 
 %description udev
