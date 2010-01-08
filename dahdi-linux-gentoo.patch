@@ -1,0 +1,265 @@
+diff -uNr dahdi-linux-2.2.0.2.ORIg/drivers/dahdi/xpp/xbus-sysfs.c dahdi-linux-2.2.0.2/drivers/dahdi/xpp/xbus-sysfs.c
+--- dahdi-linux-2.2.0.2.ORIg/drivers/dahdi/xpp/xbus-sysfs.c	2009-10-22 18:04:47.000000000 +0100
++++ dahdi-linux-2.2.0.2/drivers/dahdi/xpp/xbus-sysfs.c	2009-10-22 18:05:54.000000000 +0100
+@@ -707,7 +707,11 @@
+ 	dev->parent = &xbus->astribank;
+ 	dev_set_name(dev, "%02d:%1x:%1x", xbus->num, xpd->addr.unit, 
+ 			xpd->addr.subunit);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
++	dev_set_drvdata(dev, xpd);
++#else
+ 	dev->driver_data = xpd;
++#endif
+ 	dev->release = xpd_release;
+ 	ret = device_register(dev);
+ 	if(ret) {
+@@ -728,11 +732,21 @@
+ 	BUG_ON(!xbus);
+ 	XPD_DBG(DEVICES, xpd, "SYSFS\n");
+ 	dev = &xpd->xpd_dev;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
++	if(!dev_get_drvdata(dev))
++		return;
++	BUG_ON(dev_get_drvdata(dev) != xpd);
++#else
+ 	if(!dev->driver_data)
+ 		return;
+ 	BUG_ON(dev->driver_data != xpd);
++#endif
+ 	device_unregister(dev);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
++	dev_set_drvdata(dev, NULL);
++#else
+ 	dev->driver_data = NULL;
++#endif
+ }
+ 
+ /*--------- Sysfs Device handling ----*/
+@@ -746,9 +760,15 @@
+ 	astribank = &xbus->astribank;
+ 	BUG_ON(!astribank);
+ 	sysfs_remove_link(&astribank->kobj, "transport");
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
++	if(!dev_get_drvdata(astribank))
++		return;
++	BUG_ON(dev_get_drvdata(astribank) != xbus);
++#else
+ 	if(!astribank->driver_data)
+ 		return;
+ 	BUG_ON(astribank->driver_data != xbus);
++#endif
+ 	device_unregister(&xbus->astribank);
+ }
+ 
+@@ -764,18 +784,30 @@
+ 	astribank->bus = &toplevel_bus_type;
+ 	astribank->parent = xbus->transport.transport_device;
+ 	dev_set_name(astribank, "xbus-%02d", xbus->num);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
++	dev_set_drvdata(astribank, xbus);
++#else
+ 	astribank->driver_data = xbus;
++#endif
+ 	astribank->release = astribank_release;
+ 	ret = device_register(astribank);
+ 	if(ret) {
+ 		XBUS_ERR(xbus, "%s: device_register failed: %d\n", __FUNCTION__, ret);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
++		dev_set_drvdata(astribank, NULL);
++#else
+ 		astribank->driver_data = NULL;
++#endif
+ 		goto out;
+ 	}
+ 	ret = sysfs_create_link(&astribank->kobj, &astribank->parent->kobj, "transport");
+ 	if(ret < 0) {
+ 		XBUS_ERR(xbus, "%s: sysfs_create_link failed: %d\n", __FUNCTION__, ret);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32)
++		dev_set_drvdata(astribank, NULL);
++#else
+ 		astribank->driver_data = NULL;
++#endif
+ 		goto out;
+ 	}
+ out:
+diff -uNr dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/xpp/xpp_dahdi.c dahdi-linux-2.2.0.2/drivers/dahdi/xpp/xpp_dahdi.c
+--- dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/xpp/xpp_dahdi.c	2009-10-22 18:52:23.000000000 +0100
++++ dahdi-linux-2.2.0.2/drivers/dahdi/xpp/xpp_dahdi.c	2009-10-22 18:52:55.000000000 +0100
+@@ -865,9 +865,11 @@
+ #endif
+ 	spin_lock_irqsave(&xbus->lock, flags);
+ 	atomic_inc(&xpd->open_counter);
++/*
+ 	LINE_DBG(DEVICES, xpd, pos, "%s[%d]: open_counter=%d\n",
+ 		current->comm, current->pid,
+ 		atomic_read(&xpd->open_counter));
++*/
+ 	spin_unlock_irqrestore(&xbus->lock, flags);
+ 	if(xpd->xops->card_open)
+ 		xpd->xops->card_open(xpd, pos);
+@@ -885,9 +887,11 @@
+ 	spin_unlock_irqrestore(&xbus->lock, flags);
+ 	if(xpd->xops->card_close)
+ 		xpd->xops->card_close(xpd, pos);
++/*
+ 	LINE_DBG(DEVICES, xpd, pos, "%s[%d]: open_counter=%d\n",
+ 		current->comm, current->pid,
+ 		atomic_read(&xpd->open_counter));
++*/
+ 	atomic_dec(&xpd->open_counter);		/* from xpp_open() */
+ 	put_xpd(__FUNCTION__, xpd);					/* from xpp_open() */
+ 	return 0;
+diff -uNr dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/dahdi-base.c dahdi-linux-2.2.0.2/drivers/dahdi/dahdi-base.c
+--- dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/dahdi-base.c	2009-10-22 17:14:40.000000000 +0100
++++ dahdi-linux-2.2.0.2/drivers/dahdi/dahdi-base.c	2009-10-22 17:14:49.000000000 +0100
+@@ -46,6 +46,7 @@
+ #include <linux/kmod.h>
+ #include <linux/moduleparam.h>
+ #include <linux/list.h>
++#include <linux/sched.h>
+ 
+ #include <linux/ppp_defs.h>
+ 
+diff -uNr dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/pciradio.c dahdi-linux-2.2.0.2/drivers/dahdi/pciradio.c
+--- dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/pciradio.c	2009-10-22 17:14:40.000000000 +0100
++++ dahdi-linux-2.2.0.2/drivers/dahdi/pciradio.c	2009-10-22 17:14:49.000000000 +0100
+@@ -51,6 +51,7 @@
+ #include <linux/pci.h>
+ #include <linux/interrupt.h>
+ #include <linux/moduleparam.h>
++#include <linux/sched.h>
+ #include <asm/io.h>
+ #include <asm/delay.h> 
+ 
+diff -uNr dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/voicebus/voicebus.c dahdi-linux-2.2.0.2/drivers/dahdi/voicebus/voicebus.c
+--- dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/voicebus/voicebus.c	2009-10-22 17:14:40.000000000 +0100
++++ dahdi-linux-2.2.0.2/drivers/dahdi/voicebus/voicebus.c	2009-10-22 17:16:44.000000000 +0100
+@@ -35,6 +35,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/timer.h>
+ #include <linux/module.h>
++#include <linux/sched.h>
+ 
+ #include <dahdi/kernel.h>
+ #include "voicebus.h"
+diff -uNr dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/wcfxo.c dahdi-linux-2.2.0.2/drivers/dahdi/wcfxo.c
+--- dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/wcfxo.c	2009-10-22 17:14:40.000000000 +0100
++++ dahdi-linux-2.2.0.2/drivers/dahdi/wcfxo.c	2009-10-22 17:14:49.000000000 +0100
+@@ -30,6 +30,7 @@
+ #include <linux/usb.h>
+ #include <linux/errno.h>
+ #include <linux/pci.h>
++#include <linux/sched.h>
+ #include <asm/io.h>
+ #include <linux/moduleparam.h>
+ 
+diff -uNr dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/wct1xxp.c dahdi-linux-2.2.0.2/drivers/dahdi/wct1xxp.c
+--- dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/wct1xxp.c	2009-10-22 17:14:40.000000000 +0100
++++ dahdi-linux-2.2.0.2/drivers/dahdi/wct1xxp.c	2009-10-22 17:14:49.000000000 +0100
+@@ -33,6 +33,7 @@
+ #include <linux/pci.h>
+ #include <linux/spinlock.h>
+ #include <linux/moduleparam.h>
++#include <linux/sched.h>
+ 
+ #include <dahdi/kernel.h>
+ 
+diff -uNr dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/wctdm24xxp/base.c dahdi-linux-2.2.0.2/drivers/dahdi/wctdm24xxp/base.c
+--- dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/wctdm24xxp/base.c	2009-10-22 17:14:40.000000000 +0100
++++ dahdi-linux-2.2.0.2/drivers/dahdi/wctdm24xxp/base.c	2009-10-22 17:14:49.000000000 +0100
+@@ -45,6 +45,7 @@
+ #include <linux/workqueue.h>
+ #include <linux/delay.h>
+ #include <linux/moduleparam.h>
++#include <linux/sched.h>
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,26)
+ #include <linux/semaphore.h>
+ #else
+diff -uNr dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/wctdm.c dahdi-linux-2.2.0.2/drivers/dahdi/wctdm.c
+--- dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/wctdm.c	2009-10-22 17:14:40.000000000 +0100
++++ dahdi-linux-2.2.0.2/drivers/dahdi/wctdm.c	2009-10-22 17:14:49.000000000 +0100
+@@ -31,6 +31,8 @@
+ #include <linux/pci.h>
+ #include <linux/interrupt.h>
+ #include <linux/moduleparam.h>
++#include <linux/sched.h>
++
+ #include <asm/io.h>
+ #include "proslic.h"
+ 
+diff -uNr dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/wcte11xp.c dahdi-linux-2.2.0.2/drivers/dahdi/wcte11xp.c
+--- dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/wcte11xp.c	2009-10-22 17:14:40.000000000 +0100
++++ dahdi-linux-2.2.0.2/drivers/dahdi/wcte11xp.c	2009-10-22 17:14:49.000000000 +0100
+@@ -32,6 +32,7 @@
+ #include <linux/pci.h>
+ #include <linux/spinlock.h>
+ #include <linux/moduleparam.h>
++#include <linux/sched.h>
+ 
+ #include <dahdi/kernel.h>
+ 
+diff -uNr dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/xpp/xbus-core.c dahdi-linux-2.2.0.2/drivers/dahdi/xpp/xbus-core.c
+--- dahdi-linux-2.2.0.2.ORIG/drivers/dahdi/xpp/xbus-core.c	2009-10-22 17:14:40.000000000 +0100
++++ dahdi-linux-2.2.0.2/drivers/dahdi/xpp/xbus-core.c	2009-10-22 17:16:10.000000000 +0100
+@@ -35,6 +35,7 @@
+ #include <linux/workqueue.h>
+ #include <linux/device.h>
+ #include <linux/delay.h>	/* for msleep() to debug */
++#include <linux/sched.h>
+ #include "xpd.h"
+ #include "xpp_dahdi.h"
+ #include "xbus-core.h"
+--- dahdi-linux-2.2.0.2/drivers/dahdi/wctc4xxp/base.c	2009/08/04 16:30:11	6936
++++ dahdi-linux-2.2.0.2/drivers/dahdi/wctc4xxp/base.c	2009/08/04 16:38:56	6937
+@@ -742,6 +742,17 @@
+ 	return 0;
+ }
+ 
++#ifdef HAVE_NET_DEVICE_OPS
++static const struct net_device_ops wctc4xxp_netdev_ops = {
++	.ndo_set_multicast_list = &wctc4xxp_net_set_multi,
++	.ndo_open = &wctc4xxp_net_up,
++	.ndo_stop = &wctc4xxp_net_down,
++	.ndo_start_xmit = &wctc4xxp_net_hard_start_xmit,
++	.ndo_get_stats = &wctc4xxp_net_get_stats,
++	.ndo_do_ioctl = &wctc4xxp_net_ioctl,
++};
++#endif
++
+ /**
+  * wctc4xxp_net_register - Register a new network interface.
+  * @wc: transcoder card to register the interface for.
+@@ -773,14 +784,21 @@
+ 	netdev->priv = wc;
+ #	endif
+ 	memcpy(netdev->dev_addr, our_mac, sizeof(our_mac));
++
++#	ifdef HAVE_NET_DEVICE_OPS
++	netdev->netdev_ops = &wctc4xxp_netdev_ops;
++#	else
+ 	netdev->set_multicast_list = &wctc4xxp_net_set_multi;
+ 	netdev->open = &wctc4xxp_net_up;
+ 	netdev->stop = &wctc4xxp_net_down;
+ 	netdev->hard_start_xmit = &wctc4xxp_net_hard_start_xmit;
+ 	netdev->get_stats = &wctc4xxp_net_get_stats;
+ 	netdev->do_ioctl = &wctc4xxp_net_ioctl;
++#	endif
++
+ 	netdev->promiscuity = 0;
+ 	netdev->flags |= IFF_NOARP;
++
+ #	if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24)
+ 	netdev->poll = &wctc4xxp_poll;
+ 	netdev->weight = 64;
+diff -uNr dahdi-linux-2.2.0.2.ORIG/Makefile dahdi-linux-2.2.0.2/Makefile
+--- dahdi-linux-2.2.0.2.ORIG/Makefile	2009-10-22 16:46:00.000000000 +0100
++++ dahdi-linux-2.2.0.2/Makefile	2009-10-22 16:46:27.000000000 +0100
+@@ -184,7 +184,7 @@
+ 	build_tools/uninstall-modules dahdi $(KVERS)
+ endif
+ 	$(KMAKE) INSTALL_MOD_PATH=$(DESTDIR) INSTALL_MOD_DIR=dahdi modules_install
+-	[ `id -u` = 0 ] && /sbin/depmod -a $(KVERS) || :
++#	[ `id -u` = 0 ] && /sbin/depmod -a $(KVERS) || :
+ 
+ uninstall-modules:
+ ifdef DESTDIR
