@@ -50,13 +50,10 @@ Source6:	%{FIRMWARE_URL}/dahdi-fw-tc400m-MR6.12.tar.gz
 # Source6-md5:	2ea860bb8a9d8ede2858b9557b74ee3c
 Patch0:		%{name}-gentoo.patch
 URL:		http://www.asterisk.org/
-%if %{with kernel} && %{with dist_kernel}
+%if %{with dist_kernel}
 BuildRequires:	kernel%{_alt_kernel}-module-build
-BuildRequires:	module-init-tools
 %endif
-BuildRequires:	newt-devel
 BuildRequires:	perl-base
-BuildRequires:	perl-tools-pod
 BuildRequires:	rpmbuild(macros) >= 1.379
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -66,7 +63,7 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 # - keep X and X_in in sync
 # - X is used for actual building (entries separated with space), X_in for pld macros (entries separated with comma)
 
-%define	modules_1	dahdi.o dahdi_dynamic.o dahdi_dynamic_eth.o dahdi_dynamic_loc.o dahdi_dummy.o dahdi_echocan_jpah.o dahdi_echocan_kb1.o dahdi_echocan_mg2.o dahdi_echocan_sec.o dahdi_echocan_sec2.o pciradio.o tor2.o wcfxo.o wct1xxp.o wctdm.o wcte11xp.o 
+%define	modules_1	dahdi.o dahdi_dynamic.o dahdi_dynamic_eth.o dahdi_dynamic_loc.o dahdi_dummy.o dahdi_echocan_jpah.o dahdi_echocan_kb1.o dahdi_echocan_mg2.o dahdi_echocan_sec.o dahdi_echocan_sec2.o pciradio.o tor2.o wcfxo.o wct1xxp.o wctdm.o wcte11xp.o
 %define	modules_1_in	dahdi,dahdi_dynamic,dahdi_dynamic_eth,dahdi_dynamic_loc,dahdi_dummy,dahdi_echocan_jpah,dahdi_echocan_kb1,dahdi_echocan_mg2,dahdi_echocan_sec,dahdi_echocan_sec2,pciradio,tor2,wcfxo,wct1xxp,wctdm,wcte11xp
 %define	modules_2	voicebuss wct4xxp/ wcte12xp/ %{?with_xpp:xpp/}
 %define	modules_2_in	voicebus/dahdi_voicebus,wct4xxp/wct4xxp,wcte12xp/wcte12xp,%{?with_xpp:xpp/xpd_bri,xpp/xpd_fxo,xpp/xpd_fxs,xpp/xpd_pri,xpp/xpp,xpp/xpp_usb}
@@ -146,7 +143,7 @@ chmod a+rx download-logger
 %build
 %{__make} include/dahdi/version.h
 
-%build_kernel_modules SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi DAHDI_INCLUDE=$PWD/../../include 
+%build_kernel_modules SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi DAHDI_INCLUDE=$PWD/../../include
 
 check_modules() {
 	err=0
