@@ -28,7 +28,7 @@
 %undefine	with_xpp
 %endif
 
-%define		rel	13
+%define		rel	14
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
@@ -48,7 +48,7 @@ Source5:	%{FIRMWARE_URL}/dahdi-fw-vpmadt032-1.07.tar.gz
 # Source5-md5:	e1c7231d6225ac999cb18f4e858f66b6
 Source6:	%{FIRMWARE_URL}/dahdi-fw-tc400m-MR6.12.tar.gz
 # Source6-md5:	2ea860bb8a9d8ede2858b9557b74ee3c
-Patch0:		%{name}-gentoo.patch
+Patch0:		%{pname}-gentoo.patch
 URL:		http://www.asterisk.org/
 %if %{with dist_kernel}
 BuildRequires:	kernel%{_alt_kernel}-module-build
