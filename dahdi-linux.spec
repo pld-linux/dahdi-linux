@@ -28,18 +28,18 @@
 %undefine	with_xpp
 %endif
 
-%define		rel	16
+%define		rel	1
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
 Summary(pl.UTF-8):	Obsługa urządzeń telefonicznych DAHDI
 Name:		%{pname}%{_alt_kernel}
-Version:	2.2.0.2
+Version:	2.3.0
 Release:	%{rel}
 License:	GPL
 Group:		Base/Kernel
 Source0:	http://downloads.digium.com/pub/telephony/dahdi-linux/dahdi-linux-%{version}.tar.gz
-# Source0-md5:	1f932729ad28f2f028afcf2cc5ccf7ba
+# Source0-md5:	2c26fc3ad3db731f1793a0fc638f1985
 Source3:	%{FIRMWARE_URL}/dahdi-fw-oct6114-064-1.05.01.tar.gz
 # Source3-md5:	88db9b7a07d8392736171b1b3e6bcc66
 Source4:	%{FIRMWARE_URL}/dahdi-fw-oct6114-128-1.05.01.tar.gz
@@ -48,7 +48,9 @@ Source5:	%{FIRMWARE_URL}/dahdi-fw-vpmadt032-1.07.tar.gz
 # Source5-md5:	e1c7231d6225ac999cb18f4e858f66b6
 Source6:	%{FIRMWARE_URL}/dahdi-fw-tc400m-MR6.12.tar.gz
 # Source6-md5:	2ea860bb8a9d8ede2858b9557b74ee3c
-Patch0:		%{pname}-gentoo.patch
+Source7:	%{FIRMWARE_URL}/dahdi-fw-hx8-2.06.tar.gz
+# Source7-md5:	a7f3886942bb3e9fed349a41b3390c9f
+Patch0:		%{pname}-dummy.patch
 URL:		http://www.asterisk.org/
 %if %{with dist_kernel}
 BuildRequires:	kernel%{_alt_kernel}-module-build
@@ -63,14 +65,13 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 # - keep X and X_in in sync
 # - X is used for actual building (entries separated with space), X_in for pld macros (entries separated with comma)
 
-%define	modules_1	dahdi.o dahdi_dynamic.o dahdi_dynamic_eth.o dahdi_dynamic_loc.o dahdi_dummy.o dahdi_echocan_jpah.o dahdi_echocan_kb1.o dahdi_echocan_mg2.o dahdi_echocan_sec.o dahdi_echocan_sec2.o pciradio.o tor2.o wcfxo.o wct1xxp.o wctdm.o wcte11xp.o
-%define	modules_1_in	dahdi,dahdi_dynamic,dahdi_dynamic_eth,dahdi_dynamic_loc,dahdi_dummy,dahdi_echocan_jpah,dahdi_echocan_kb1,dahdi_echocan_mg2,dahdi_echocan_sec,dahdi_echocan_sec2,pciradio,tor2,wcfxo,wct1xxp,wctdm,wcte11xp
-%define	modules_2	voicebuss wct4xxp/ wcte12xp/ %{?with_xpp:xpp/}
+%define	modules_1	dahdi.o dahdi_dynamic.o dahdi_dynamic_eth.o dahdi_dynamic_ethmf.o dahdi_dynamic_loc.o dahdi_dummy.o dahdi_echocan_jpah.o dahdi_echocan_kb1.o dahdi_echocan_mg2.o dahdi_echocan_sec.o dahdi_echocan_sec2.o pciradio.o tor2.o wcfxo.o wct1xxp.o wctdm.o wcte11xp.o
+%define	modules_1_in	dahdi,dahdi_dynamic,dahdi_dynamic_eth,dahdi_dynamic_ethmf,dahdi_dynamic_loc,dahdi_dummy,dahdi_echocan_jpah,dahdi_echocan_kb1,dahdi_echocan_mg2,dahdi_echocan_sec,dahdi_echocan_sec2,pciradio,tor2,wcfxo,wct1xxp,wctdm,wcte11xp
+%define	modules_2	voicebus/ wct4xxp/ wcte12xp/ %{?with_xpp:xpp/}
 %define	modules_2_in	voicebus/dahdi_voicebus,wct4xxp/wct4xxp,wcte12xp/wcte12xp,%{?with_xpp:xpp/xpd_bri,xpp/xpd_fxo,xpp/xpd_fxs,xpp/xpd_pri,xpp/xpp,xpp/xpp_usb}
 %ifnarch alpha
 %define	modules_nalpha	wctc4xxp/ wctdm24xxp/ dahdi_transcode.o wcb4xxp/
 %define	modules_nalpha_in	wctc4xxp/wctc4xxp,wctdm24xxp/wctdm24xxp,dahdi_transcode,wcb4xxp/wcb4xxp
-
 %endif
 %define	modules		%{modules_1} %{modules_2}%{?modules_nalpha: %{modules_nalpha}}
 %define	modules_in	%{modules_1_in},%{modules_2_in}%{?modules_nalpha:,%{modules_nalpha_in}}
@@ -128,7 +129,7 @@ Sterownik dla jądra Linuksa do urządzeń telefonicznych DAHDI.
 %setup -q -n %{pname}-%{version}
 %patch0 -p1
 
-for a in %{SOURCE3} %{SOURCE4} %{SOURCE5} %{SOURCE6}; do
+for a in %{SOURCE3} %{SOURCE4} %{SOURCE5} %{SOURCE6} %{SOURCE7}; do
 	ln -s $a drivers/dahdi/firmware
 	tar -C drivers/dahdi/firmware -xzf $a
 done
