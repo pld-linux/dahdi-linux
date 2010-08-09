@@ -1,0 +1,30 @@
+--- dahdi-linux-2.3.0/drivers/dahdi/dahdi_echocan_jpah.c	2010-04-14 20:07:50.667124592 +0000
++++ dahdi-linux-2.3.0/drivers/dahdi/dahdi_echocan_jpah.c	2010-04-14 20:08:05.434124321 +0000
+@@ -32,6 +32,7 @@
+ #include <linux/init.h>
+ #include <linux/ctype.h>
+ #include <linux/moduleparam.h>
++#include <linux/slab.h>
+ 
+ #include <dahdi/kernel.h>
+ 
+--- dahdi-linux-2.3.0/drivers/dahdi/dahdi_echocan_oslec.c	2010-04-14 20:07:50.667124592 +0000
++++ dahdi-linux-2.3.0/drivers/dahdi/dahdi_echocan_oslec.c	2010-04-14 20:08:05.434124321 +0000
+@@ -32,6 +32,7 @@
+ #include <linux/init.h>
+ #include <linux/ctype.h>
+ #include <linux/moduleparam.h>
++#include <linux/slab.h>
+ 
+ #include <dahdi/kernel.h>
+ 
+--- dahdi-linux-2.3.0.1/drivers/dahdi/dahdi_dummy.c~	2009-08-05 21:39:13.000000000 +0200
++++ dahdi-linux-2.3.0.1/drivers/dahdi/dahdi_dummy.c	2010-08-09 12:04:24.965332226 +0200
+@@ -48,6 +48,7 @@
+ #include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/errno.h>
++#include <linux/slab.h>
+ #include <linux/moduleparam.h>
+ 
+ #if defined(USE_HIGHRESTIMER)
