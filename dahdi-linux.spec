@@ -12,6 +12,7 @@
 #
 # Conditional build:
 %bcond_without	dist_kernel	# without distribution kernel
+%bcond_without  kernel		# don't build kernel modules
 %bcond_with	oslec		# with Open Source Line Echo Canceller
 %bcond_without	xpp		# without Astribank
 %bcond_without	userspace	# don't build userspace packages
@@ -27,19 +28,22 @@
 %ifarch alpha
 %undefine	with_xpp
 %endif
+%if %{without kernel}
+%undefine	with_dist_kernel
+%endif
 
-%define		rel	6
+%define		rel	1
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
 Summary(pl.UTF-8):	Obsługa urządzeń telefonicznych DAHDI
 Name:		%{pname}%{_alt_kernel}
-Version:	2.3.0
+Version:	2.3.0.1
 Release:	%{rel}
 License:	GPL
 Group:		Base/Kernel
 Source0:	http://downloads.digium.com/pub/telephony/dahdi-linux/dahdi-linux-%{version}.tar.gz
-# Source0-md5:	2c26fc3ad3db731f1793a0fc638f1985
+# Source0-md5:	ac454f91d7e1267655ecd698832da414
 Source3:	%{FIRMWARE_URL}/dahdi-fw-oct6114-064-1.05.01.tar.gz
 # Source3-md5:	88db9b7a07d8392736171b1b3e6bcc66
 Source4:	%{FIRMWARE_URL}/dahdi-fw-oct6114-128-1.05.01.tar.gz
@@ -144,6 +148,7 @@ chmod a+rx download-logger
 %build
 %{__make} include/dahdi/version.h
 
+%if %{with kernel}
 %build_kernel_modules SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi DAHDI_INCLUDE=$PWD/../../include
 
 check_modules() {
@@ -159,13 +164,16 @@ check_modules() {
 	[ $err = 0 ] || exit 1
 }
 check_modules
+%endif
 
 %install
 rm -rf $RPM_BUILD_ROOT
 mkdir $RPM_BUILD_ROOT%{_includedir}/dahdi -p
+%if %{with kernel}
 cd drivers/dahdi
 %install_kernel_modules -m %{modules_in} -d misc
 cd ../..
+%endif
 
 %if %{with userspace}
 install -d $RPM_BUILD_ROOT/etc/udev/rules.d
@@ -196,6 +204,8 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %verify(not md5 mtime size) /etc/udev/rules.d/xpp.rules
 %endif
 
+%if %{with kernel}
 %files -n kernel%{_alt_kernel}-%{pname}
 %defattr(644,root,root,755)
 /lib/modules/%{_kernel_ver}/misc/*.ko*
+%endif
