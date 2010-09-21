@@ -32,18 +32,18 @@
 %undefine	with_dist_kernel
 %endif
 
-%define		rel	7
+%define		rel	1
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
 Summary(pl.UTF-8):	Obsługa urządzeń telefonicznych DAHDI
 Name:		%{pname}%{_alt_kernel}
-Version:	2.3.0.1
+Version:	2.4.0
 Release:	%{rel}
 License:	GPL
 Group:		Base/Kernel
 Source0:	http://downloads.digium.com/pub/telephony/dahdi-linux/dahdi-linux-%{version}.tar.gz
-# Source0-md5:	ac454f91d7e1267655ecd698832da414
+# Source0-md5:	0114826395f76713486142b90d772f82
 Source3:	%{FIRMWARE_URL}/dahdi-fw-oct6114-064-1.05.01.tar.gz
 # Source3-md5:	88db9b7a07d8392736171b1b3e6bcc66
 Source4:	%{FIRMWARE_URL}/dahdi-fw-oct6114-128-1.05.01.tar.gz
