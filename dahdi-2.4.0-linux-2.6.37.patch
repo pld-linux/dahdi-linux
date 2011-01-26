@@ -1,0 +1,92 @@
+diff -Naurp dahdi-linux-2.4.0.orig/drivers/dahdi/voicebus/voicebus.c dahdi-linux-2.4.0/drivers/dahdi/voicebus/voicebus.c
+--- dahdi-linux-2.4.0.orig/drivers/dahdi/voicebus/voicebus.c	2010-08-17 13:53:18.000000000 +0200
++++ dahdi-linux-2.4.0/drivers/dahdi/voicebus/voicebus.c	2010-11-01 22:01:57.382883648 +0100
+@@ -1120,7 +1120,7 @@ static void vb_stop_txrx_processors(stru
+  */
+ void voicebus_stop(struct voicebus *vb)
+ {
+-	static DECLARE_MUTEX(stop);
++	static DEFINE_SEMAPHORE(stop);
+ 
+ 	down(&stop);
+ 
+diff -Naurp dahdi-linux-2.4.0.orig/drivers/dahdi/wctc4xxp/base.c dahdi-linux-2.4.0/drivers/dahdi/wctc4xxp/base.c
+--- dahdi-linux-2.4.0.orig/drivers/dahdi/wctc4xxp/base.c	2010-07-28 17:32:03.000000000 +0200
++++ dahdi-linux-2.4.0/drivers/dahdi/wctc4xxp/base.c	2010-11-01 22:01:57.366885577 +0100
+@@ -3443,7 +3443,7 @@ wctc4xxp_init_one(struct pci_dev *pdev, 
+ 		return -EIO;
+ 	}
+ 
+-	init_MUTEX(&wc->chansem);
++	sema_init(&wc->chansem, 1);
+ 	spin_lock_init(&wc->reglock);
+ 	spin_lock_init(&wc->cmd_list_lock);
+ 	spin_lock_init(&wc->rx_list_lock);
+diff -Naurp dahdi-linux-2.4.0.orig/drivers/dahdi/wctdm24xxp/base.c dahdi-linux-2.4.0/drivers/dahdi/wctdm24xxp/base.c
+--- dahdi-linux-2.4.0.orig/drivers/dahdi/wctdm24xxp/base.c	2010-08-19 20:03:25.000000000 +0200
++++ dahdi-linux-2.4.0/drivers/dahdi/wctdm24xxp/base.c	2010-11-01 22:01:57.395882083 +0100
+@@ -207,7 +207,7 @@ static inline bool is_hx8(const struct w
+ }
+ 
+ struct wctdm *ifaces[WC_MAX_IFACES];
+-DECLARE_MUTEX(ifacelock);
++DEFINE_SEMAPHORE(ifacelock);
+ 
+ static void wctdm_release(struct wctdm *wc);
+ 
+@@ -4917,7 +4917,7 @@ __wctdm_init_one(struct pci_dev *pdev, c
+ 
+ 	/* This is to insure that the analog span is given lowest priority */
+ 	wc->oldsync = -1;
+-	init_MUTEX(&wc->syncsem);
++	sema_init(&wc->syncsem, 1);
+ 	INIT_LIST_HEAD(&wc->frame_list);
+ 	spin_lock_init(&wc->frame_list_lock);
+ 
+diff -Naurp dahdi-linux-2.4.0.orig/drivers/dahdi/wctdm24xxp/xhfc.c dahdi-linux-2.4.0/drivers/dahdi/wctdm24xxp/xhfc.c
+--- dahdi-linux-2.4.0.orig/drivers/dahdi/wctdm24xxp/xhfc.c	2010-08-13 20:36:15.000000000 +0200
++++ dahdi-linux-2.4.0/drivers/dahdi/wctdm24xxp/xhfc.c	2010-11-01 22:01:57.396881962 +0100
+@@ -2576,8 +2576,8 @@ static int b400m_probe(struct wctdm *wc,
+ 	}
+ 
+ 	spin_lock_init(&b4->reglock);
+-	init_MUTEX(&b4->regsem);
+-	init_MUTEX(&b4->fifosem);
++	sema_init(&b4->regsem, 1);
++	sema_init(&b4->fifosem, 1);
+ 
+ 	for (x = 0; x < 4; x++) {
+ 		fasthdlc_init(&b4->spans[x].rxhdlc, FASTHDLC_MODE_16);
+diff -Naurp dahdi-linux-2.4.0.orig/drivers/dahdi/xpp/xbus-core.c dahdi-linux-2.4.0/drivers/dahdi/xpp/xbus-core.c
+--- dahdi-linux-2.4.0.orig/drivers/dahdi/xpp/xbus-core.c	2010-07-13 21:38:13.000000000 +0200
++++ dahdi-linux-2.4.0/drivers/dahdi/xpp/xbus-core.c	2010-11-01 22:01:57.243900400 +0100
+@@ -1165,7 +1165,7 @@ static void worker_init(xbus_t *xbus)
+ 	INIT_LIST_HEAD(&worker->card_list);
+ 	init_waitqueue_head(&worker->wait_for_xpd_initialization);
+ 	worker->wq = NULL;
+-	init_MUTEX(&xbus->worker.running_initialization);
++	sema_init(&xbus->worker.running_initialization, 1);
+ }
+ 
+ /*
+diff -Naurp dahdi-linux-2.4.0.orig/drivers/dahdi/xpp/xpp_usb.c dahdi-linux-2.4.0/drivers/dahdi/xpp/xpp_usb.c
+--- dahdi-linux-2.4.0.orig/drivers/dahdi/xpp/xpp_usb.c	2010-07-13 10:33:00.000000000 +0200
++++ dahdi-linux-2.4.0/drivers/dahdi/xpp/xpp_usb.c	2010-11-01 22:01:57.257898713 +0100
+@@ -248,7 +248,7 @@ static unsigned bus_count = 0;
+ 
+ 
+ /* prevent races between open() and disconnect() */
+-static DECLARE_MUTEX (disconnect_sem);
++static DEFINE_SEMAPHORE(disconnect_sem);
+ 
+ /*
+  * AsteriskNow kernel has backported the "lean" callback from 2.6.20
+@@ -690,7 +690,7 @@ static int xusb_probe(struct usb_interfa
+ 		retval = -ENOMEM;
+ 		goto probe_failed;
+ 	}
+-	init_MUTEX (&xusb->sem);
++	sema_init (&xusb->sem, 1);
+ 	atomic_set(&xusb->pending_writes, 0);
+ 	atomic_set(&xusb->pending_reads, 0);
+ 	atomic_set(&xusb->pcm_tx_drops, 0);
