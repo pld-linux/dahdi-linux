@@ -38,12 +38,12 @@
 Summary:	DAHDI telephony device support
 Summary(pl.UTF-8):	Obsługa urządzeń telefonicznych DAHDI
 Name:		%{pname}%{_alt_kernel}
-Version:	2.5.0
+Version:	2.5.0.1
 Release:	%{rel}
 License:	GPL
 Group:		Base/Kernel
 Source0:	http://downloads.asterisk.org/pub/telephony/dahdi-linux/releases/dahdi-linux-%{version}.tar.gz
-# Source0-md5:	449f6591ccedb68937b5b30cbd37cea3
+# Source0-md5:	d7efc5ebc9bf81a5263321e5e9891fc1
 Source3:	%{FIRMWARE_URL}/dahdi-fw-oct6114-064-1.05.01.tar.gz
 # Source3-md5:	88db9b7a07d8392736171b1b3e6bcc66
 Source4:	%{FIRMWARE_URL}/dahdi-fw-oct6114-128-1.05.01.tar.gz
@@ -75,7 +75,7 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 %define	modules_1	dahdi.o dahdi_dynamic.o dahdi_dynamic_eth.o dahdi_dynamic_ethmf.o dahdi_dynamic_loc.o dahdi_dummy.o dahdi_echocan_jpah.o dahdi_echocan_kb1.o dahdi_echocan_mg2.o dahdi_echocan_sec.o dahdi_echocan_sec2.o pciradio.o tor2.o wcfxo.o wct1xxp.o wctdm.o wcte11xp.o
 %define	modules_1_in	dahdi,dahdi_dynamic,dahdi_dynamic_eth,dahdi_dynamic_ethmf,dahdi_dynamic_loc,dahdi_dummy,dahdi_echocan_jpah,dahdi_echocan_kb1,dahdi_echocan_mg2,dahdi_echocan_sec,dahdi_echocan_sec2,pciradio,tor2,wcfxo,wct1xxp,wctdm,wcte11xp
 %define	modules_2	voicebus/ wct4xxp/ wcte12xp/ %{?with_xpp:xpp/}
-%define	modules_2_in	voicebus/dahdi_voicebus,wct4xxp/wct4xxp,wcte12xp/wcte12xp,%{?with_xpp:xpp/xpd_bri,xpp/xpd_fxo,xpp/xpd_fxs,xpp/xpd_pri,xpp/xpp,xpp/xpp_usb}
+%define	modules_2_in	voicebus/dahdi_voicebus,wct4xxp/wct4xxp,wcte12xp/wcte12xp,%{?with_xpp:xpp/xpd_bri,xpp/xpd_echo,xpp/xpd_fxo,xpp/xpd_fxs,xpp/xpd_pri,xpp/xpp,xpp/xpp_usb}
 %ifnarch alpha
 %define	modules_nalpha	wctc4xxp/ wctdm24xxp/ dahdi_transcode.o wcb4xxp/
 %define	modules_nalpha_in	wctc4xxp/wctc4xxp,wctdm24xxp/wctdm24xxp,dahdi_transcode,wcb4xxp/wcb4xxp
