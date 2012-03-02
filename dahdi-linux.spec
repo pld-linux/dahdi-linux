@@ -154,6 +154,9 @@ chmod a+rx download-logger
 %if %{with kernel}
 %build_kernel_modules SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi DAHDI_INCLUDE=$PWD/../../include
 
+# check that all built .ko is handled by build_kernel_modules
+# (renamed to either -dist, -up, or -smp suffix)
+# if some missing, check the 'modules*' macros above
 check_modules() {
 	err=0
 	for a in drivers/dahdi/{*/,}*.ko; do
