@@ -1,0 +1,23 @@
+--- dahdi-linux-2.6.0/drivers/dahdi/wcb4xxp/base.c.orig	2012-07-01 14:54:16.403757879 +0200
++++ dahdi-linux-2.6.0/drivers/dahdi/wcb4xxp/base.c	2012-07-01 14:57:24.020417929 +0200
+@@ -22,6 +22,7 @@
+ 
+ #include <linux/init.h>
+ 
++#include <linux/version.h>
+ #include <linux/kernel.h>	/* printk() */
+ #include <linux/errno.h>	/* error codes */
+ #include <linux/module.h>
+@@ -35,7 +36,11 @@
+ #include <linux/spinlock.h>
+ #include <linux/device.h>	/* dev_err() */
+ #include <linux/interrupt.h>
+-#include <asm/system.h>		/* cli(), *_flags */
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 4, 0)
++#include <asm/system.h>		/* *mb(), barrier() */
++#else
++#include <asm/barrier.h>	/* *mb(), barrier() */
++#endif
+ #include <asm/uaccess.h>	/* copy_*_user */
+ #include <linux/workqueue.h>	/* work_struct */
+ #include <linux/timer.h>	/* timer_struct */

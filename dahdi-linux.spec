@@ -57,6 +57,7 @@ Source7:	%{FIRMWARE_URL}/dahdi-fw-hx8-2.06.tar.gz
 Patch0:		%{pname}-build.patch
 # http://oss.axsentis.de/people/stkn/openzap/dahdi-2.4.0-linux-2.6.37.patch
 Patch1:		dahdi-2.4.0-linux-2.6.37.patch
+Patch2:		dahdi-linux-kernel-3.4.patch
 URL:		http://www.asterisk.org/
 %if %{with dist_kernel}
 BuildRequires:	kernel%{_alt_kernel}-module-build
@@ -135,6 +136,7 @@ Sterownik dla jądra Linuksa do urządzeń telefonicznych DAHDI.
 %setup -q -n %{pname}-%{version}
 %patch0 -p1
 #%patch1 -p1
+%patch2 -p1
 
 for a in %{SOURCE3} %{SOURCE4} %{SOURCE5} %{SOURCE6} %{SOURCE7}; do
 	ln -s $a drivers/dahdi/firmware
