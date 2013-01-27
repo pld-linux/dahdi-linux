@@ -32,18 +32,18 @@
 %undefine	with_dist_kernel
 %endif
 
-%define		rel	46
+%define		rel	1
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
 Summary(pl.UTF-8):	Obsługa urządzeń telefonicznych DAHDI
 Name:		%{pname}%{_alt_kernel}
-Version:	2.6.0
+Version:	2.6.1
 Release:	%{rel}
 License:	GPL
 Group:		Base/Kernel
 Source0:	http://downloads.asterisk.org/pub/telephony/dahdi-linux/releases/dahdi-linux-%{version}.tar.gz
-# Source0-md5:	ea35ad29dafe5490028ff642c35ef9a2
+# Source0-md5:	75932fe3d4a6e656165aaaa7a1377305
 Source3:	%{FIRMWARE_URL}/dahdi-fw-oct6114-064-1.05.01.tar.gz
 # Source3-md5:	88db9b7a07d8392736171b1b3e6bcc66
 Source4:	%{FIRMWARE_URL}/dahdi-fw-oct6114-128-1.05.01.tar.gz
@@ -56,8 +56,6 @@ Source7:	%{FIRMWARE_URL}/dahdi-fw-hx8-2.06.tar.gz
 # Source7-md5:	a7f3886942bb3e9fed349a41b3390c9f
 Patch0:		%{pname}-build.patch
 # http://oss.axsentis.de/people/stkn/openzap/dahdi-2.4.0-linux-2.6.37.patch
-Patch1:		dahdi-2.4.0-linux-2.6.37.patch
-Patch2:		dahdi-linux-kernel-3.4.patch
 URL:		http://www.asterisk.org/
 %if %{with dist_kernel}
 BuildRequires:	kernel%{_alt_kernel}-module-build
@@ -91,14 +89,14 @@ Sterownik do urządzeń telefonicznych DAHDI.
 
 %package devel
 Summary:	Header files for dahdi interface
+Summary(pl.UTF-8):	Pliki nagłówkowe interfejsu dahdi
 Group:		Development/Libraries
-# if base package contains shared library for which these headers are
-#Requires:	%{name} = %{version}-%{release}
-# if -libs package contains shared library for which these headers are
-#Requires:	%{name}-libs = %{version}-%{release}
 
 %description devel
 Header files for dahdi interface.
+
+%description devel -l pl.UTF-8
+Pliki nagłówkowe interfejsu dahdi.
 
 %package udev
 Summary:	udev rules for DAHDI kernel modules
@@ -135,8 +133,6 @@ Sterownik dla jądra Linuksa do urządzeń telefonicznych DAHDI.
 %prep
 %setup -q -n %{pname}-%{version}
 %patch0 -p1
-#%patch1 -p1
-%patch2 -p1
 
 for a in %{SOURCE3} %{SOURCE4} %{SOURCE5} %{SOURCE6} %{SOURCE7}; do
 	ln -s $a drivers/dahdi/firmware
@@ -186,10 +182,8 @@ cd ../..
 %if %{with userspace}
 install -d $RPM_BUILD_ROOT/etc/udev/rules.d
 
-%{make} \
-	DESTDIR=$RPM_BUILD_ROOT \
-	install-devices \
-	install-include
+%{__make} install-devices install-include \
+	DESTDIR=$RPM_BUILD_ROOT
 %endif
 
 %clean
