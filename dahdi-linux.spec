@@ -32,18 +32,18 @@
 %undefine	with_dist_kernel
 %endif
 
-%define		rel	23
+%define		rel	1
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
 Summary(pl.UTF-8):	Obsługa urządzeń telefonicznych DAHDI
 Name:		%{pname}%{_alt_kernel}
-Version:	2.6.2
+Version:	2.7.0
 Release:	%{rel}
-License:	GPL
+License:	GPL v2
 Group:		Base/Kernel
 Source0:	http://downloads.asterisk.org/pub/telephony/dahdi-linux/releases/dahdi-linux-%{version}.tar.gz
-# Source0-md5:	6b205d77c4556d288ecca05035bc0503
+# Source0-md5:	ac0d7ed711130e8038b304c5e2f96334
 Source3:	%{FIRMWARE_URL}/dahdi-fw-oct6114-064-1.05.01.tar.gz
 # Source3-md5:	88db9b7a07d8392736171b1b3e6bcc66
 Source4:	%{FIRMWARE_URL}/dahdi-fw-oct6114-128-1.05.01.tar.gz
@@ -150,24 +150,10 @@ chmod a+rx download-logger
 %{__make} include/dahdi/version.h
 
 %if %{with kernel}
-%build_kernel_modules SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi DAHDI_INCLUDE=$PWD/../../include
+# hack: build library first (using explicit "lib" target), then modules without cleaning (-c)
+%build_kernel_modules lib SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi/oct612x DAHDI_INCLUDE=$PWD/../../include
 
-# check that all built .ko is handled by build_kernel_modules
-# (renamed to either -dist, -up, or -smp suffix)
-# if some missing, check the 'modules*' macros above
-check_modules() {
-	err=0
-	for a in drivers/dahdi/{*/,}*.ko; do
-		[[ $a = *-dist.ko ]] && continue
-		[[ $a = *-up.ko ]] && continue
-		[[ $a = *-smp.ko ]] && continue
-		echo >&2 "unpackaged module: ${a%.ko}"
-		err=1
-	done
-
-	[ $err = 0 ] || exit 1
-}
-#check_modules
+%build_kernel_modules SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi DAHDI_INCLUDE=$PWD/../../include -c
 %endif
 
 %install
@@ -209,5 +195,21 @@ rm -rf $RPM_BUILD_ROOT
 %if %{with kernel}
 %files -n kernel%{_alt_kernel}-%{pname}
 %defattr(644,root,root,755)
-/lib/modules/%{_kernel_ver}/misc/*.ko*
+/lib/modules/%{_kernel_ver}/misc/dahdi*.ko*
+/lib/modules/%{_kernel_ver}/misc/pciradio.ko*
+/lib/modules/%{_kernel_ver}/misc/tor2.ko*
+/lib/modules/%{_kernel_ver}/misc/wcb4xxp.ko*
+/lib/modules/%{_kernel_ver}/misc/wcfxo.ko*
+/lib/modules/%{_kernel_ver}/misc/wct1xxp.ko*
+/lib/modules/%{_kernel_ver}/misc/wct4xxp.ko*
+/lib/modules/%{_kernel_ver}/misc/wctc4xxp.ko*
+/lib/modules/%{_kernel_ver}/misc/wctdm.ko*
+/lib/modules/%{_kernel_ver}/misc/wctdm24xxp.ko*
+/lib/modules/%{_kernel_ver}/misc/wcte11xp.ko*
+/lib/modules/%{_kernel_ver}/misc/wcte12xp.ko*
+%if %{with xpp}
+/lib/modules/%{_kernel_ver}/misc/xpd_*.ko*
+/lib/modules/%{_kernel_ver}/misc/xpp.ko*
+/lib/modules/%{_kernel_ver}/misc/xpp_usb.ko*
+%endif
 %endif
