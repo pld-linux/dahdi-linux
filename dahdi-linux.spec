@@ -18,28 +18,50 @@
 %bcond_without	userspace	# don't build userspace packages
 %bcond_with	verbose
 
-%if "%{_alt_kernel}" != "%{nil}"
-%undefine	with_userspace
-%endif
-
-%ifarch sparc
-%undefine	with_smp
-%endif
 %ifarch alpha
 %undefine	with_xpp
 %endif
+
 %if %{without kernel}
 %undefine	with_dist_kernel
 %endif
 
-%define		rel	10
+# The goal here is to have main, userspace, package built once with
+# simple release number, and only rebuild kernel packages with kernel
+# version as part of release number, without the need to bump release
+# with every kernel change.
+%if 0%{?_pld_builder:1} && %{with kernel} && %{with userspace}
+%{error:kernel and userspace cannot be built at the same time on PLD builders}
+exit 1
+%endif
+
+%if "%{_alt_kernel}" != "%{nil}"
+%if 0%{?build_kernels:1}
+%{error:alt_kernel and build_kernels are mutually exclusive}
+exit 1
+%endif
+%undefine	with_userspace
+%global		_build_kernels		%{alt_kernel}
+%else
+%global		_build_kernels		%{?build_kernels:,%{?build_kernels}}
+%endif
+
+%if %{without userspace}
+# nothing to be placed to debuginfo package
+%define		_enable_debug_packages	0
+%endif
+
+%define		kpkg	%(echo %{_build_kernels} | tr , '\\n' | while read n ; do echo %%undefine alt_kernel ; [ -z "$n" ] || echo %%define alt_kernel $n ; echo %%kernel_pkg ; done)
+%define		bkpkg	%(echo %{_build_kernels} | tr , '\\n' | while read n ; do echo %%undefine alt_kernel ; [ -z "$n" ] || echo %%define alt_kernel $n ; echo %%build_kernel_pkg ; done)
+
+%define		rel	11
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
 Summary(pl.UTF-8):	Obsługa urządzeń telefonicznych DAHDI
 Name:		%{pname}%{_alt_kernel}
 Version:	2.7.0.1
-Release:	%{rel}
+Release:	%{rel}%{?with_kernel:@%{_kernel_ver_str}}
 License:	GPL v2
 Group:		Base/Kernel
 Source0:	http://downloads.asterisk.org/pub/telephony/dahdi-linux/releases/dahdi-linux-%{version}.tar.gz
@@ -55,9 +77,8 @@ Source6:	%{FIRMWARE_URL}/dahdi-fw-tc400m-MR6.12.tar.gz
 Source7:	%{FIRMWARE_URL}/dahdi-fw-hx8-2.06.tar.gz
 # Source7-md5:	a7f3886942bb3e9fed349a41b3390c9f
 URL:		http://www.asterisk.org/
-%if %{with dist_kernel}
-BuildRequires:	kernel%{_alt_kernel}-module-build
-%endif
+BuildRequires:	rpmbuild(macros) >= 1.678
+%{?with_dist_kernel:BuildRequires:	kernel%{_alt_kernel}-module-build >= 3:2.6.20.2}
 BuildRequires:	perl-base
 BuildRequires:	rpmbuild(macros) >= 1.379
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
@@ -110,23 +131,66 @@ udev rules for DAHDI kernel modules.
 %description udev -l pl.UTF-8
 Reguły udev dla modułów jądra Linuksa dla DAHDI.
 
-%package -n kernel%{_alt_kernel}-%{pname}
-Summary:	DAHDI Linux kernel driver
-Summary(pl.UTF-8):	Sterownik DAHDI dla jądra Linuksa
-Release:	%{rel}@%{_kernel_ver_str}
-Group:		Base/Kernel
-Requires(post,postun):	/sbin/depmod
-%if %{with dist_kernel}
-%requires_releq_kernel
-Requires(postun):	%releq_kernel
-%{?with_oslec:Requires:	kernel-misc-oslec = 20070608-0.1@%{_kernel_ver_str}}
-%endif
+%define	kernel_pkg()\
+%package -n kernel%{_alt_kernel}-%{pname}\
+Summary:	DAHDI Linux kernel driver\
+Summary(pl.UTF-8):	Sterownik DAHDI dla jądra Linuksa\
+Release:	%{rel}@%{_kernel_ver_str}\
+Group:		Base/Kernel\
+Requires(post,postun):	/sbin/depmod\
+%if %{with dist_kernel}\
+%requires_releq_kernel\
+Requires(postun):	%releq_kernel\
+%{?with_oslec:Requires:	kernel-misc-oslec = 20070608-0.1@%{_kernel_ver_str}}\
+%endif\
+\
+%description -n kernel%{_alt_kernel}-%{pname}\
+DAHDI telephony Linux kernel driver.\
+\
+%description -n kernel%{_alt_kernel}-%{pname} -l pl.UTF-8\
+Sterownik dla jądra Linuksa do urządzeń telefonicznych DAHDI.\
+\
+%if %{with kernel}\
+%files -n kernel%{_alt_kernel}-%{pname}\
+%defattr(644,root,root,755)\
+/lib/modules/%{_kernel_ver}/misc/dahdi*.ko*\
+/lib/modules/%{_kernel_ver}/misc/pciradio.ko*\
+/lib/modules/%{_kernel_ver}/misc/tor2.ko*\
+/lib/modules/%{_kernel_ver}/misc/wcb4xxp.ko*\
+/lib/modules/%{_kernel_ver}/misc/wcfxo.ko*\
+/lib/modules/%{_kernel_ver}/misc/wct1xxp.ko*\
+/lib/modules/%{_kernel_ver}/misc/wct4xxp.ko*\
+/lib/modules/%{_kernel_ver}/misc/wctc4xxp.ko*\
+/lib/modules/%{_kernel_ver}/misc/wctdm.ko*\
+/lib/modules/%{_kernel_ver}/misc/wctdm24xxp.ko*\
+/lib/modules/%{_kernel_ver}/misc/wcte11xp.ko*\
+/lib/modules/%{_kernel_ver}/misc/wcte12xp.ko*\
+%if %{with xpp}\
+/lib/modules/%{_kernel_ver}/misc/xpd_*.ko*\
+/lib/modules/%{_kernel_ver}/misc/xpp.ko*\
+/lib/modules/%{_kernel_ver}/misc/xpp_usb.ko*\
+%endif\
+%endif\
+\
+%post -n kernel%{_alt_kernel}-%{pname}\
+%depmod %{_kernel_ver}\
+\
+%postun -n kernel%{_alt_kernel}-%{pname}\
+%depmod %{_kernel_ver}\
+%{nil}
 
-%description -n kernel%{_alt_kernel}-%{pname}
-DAHDI telephony Linux kernel driver.
+%define build_kernel_pkg()\
+%if %{with kernel}\
+# hack: build library first (using explicit "lib" target), then modules without cleaning (-c)\
+%build_kernel_modules lib SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi/oct612x DAHDI_INCLUDE=$PWD/../../include\
+%build_kernel_modules SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi DAHDI_INCLUDE=$PWD/../../include -c\
+cd drivers/dahdi\
+%install_kernel_modules -D ../../installed -m %{modules_in} -d misc\
+cd ../..\
+%endif\
+%{nil}
 
-%description -n kernel%{_alt_kernel}-%{pname} -l pl.UTF-8
-Sterownik dla jądra Linuksa do urządzeń telefonicznych DAHDI.
+%{?with_kernel:%{expand:%kpkg}}
 
 %prep
 %setup -q -n %{pname}-%{version}
@@ -146,21 +210,11 @@ chmod a+rx download-logger
 %build
 %{__make} include/dahdi/version.h
 
-%if %{with kernel}
-# hack: build library first (using explicit "lib" target), then modules without cleaning (-c)
-%build_kernel_modules lib SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi/oct612x DAHDI_INCLUDE=$PWD/../../include
-
-%build_kernel_modules SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi DAHDI_INCLUDE=$PWD/../../include -c
-%endif
+%{?with_kernel:%{expand:%bkpkg}}
 
 %install
 rm -rf $RPM_BUILD_ROOT
-mkdir $RPM_BUILD_ROOT%{_includedir}/dahdi -p
-%if %{with kernel}
-cd drivers/dahdi
-%install_kernel_modules -m %{modules_in} -d misc
-cd ../..
-%endif
+install -d $RPM_BUILD_ROOT%{_includedir}/dahdi
 
 %if %{with userspace}
 install -d $RPM_BUILD_ROOT/etc/udev/rules.d
@@ -169,14 +223,12 @@ install -d $RPM_BUILD_ROOT/etc/udev/rules.d
 	DESTDIR=$RPM_BUILD_ROOT
 %endif
 
+%if %{with kernel}
+cp -a installed/* $RPM_BUILD_ROOT
+%endif
+
 %clean
 rm -rf $RPM_BUILD_ROOT
-
-%post -n kernel%{_alt_kernel}-%{pname}
-%depmod %{_kernel_ver}
-
-%postun -n kernel%{_alt_kernel}-%{pname}
-%depmod %{_kernel_ver}
 
 %if %{with userspace}
 %files devel
@@ -187,26 +239,4 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %config(noreplace) %verify(not md5 mtime size) /etc/udev/rules.d/dahdi.rules
 %config(noreplace) %verify(not md5 mtime size) /etc/udev/rules.d/xpp.rules
-%endif
-
-%if %{with kernel}
-%files -n kernel%{_alt_kernel}-%{pname}
-%defattr(644,root,root,755)
-/lib/modules/%{_kernel_ver}/misc/dahdi*.ko*
-/lib/modules/%{_kernel_ver}/misc/pciradio.ko*
-/lib/modules/%{_kernel_ver}/misc/tor2.ko*
-/lib/modules/%{_kernel_ver}/misc/wcb4xxp.ko*
-/lib/modules/%{_kernel_ver}/misc/wcfxo.ko*
-/lib/modules/%{_kernel_ver}/misc/wct1xxp.ko*
-/lib/modules/%{_kernel_ver}/misc/wct4xxp.ko*
-/lib/modules/%{_kernel_ver}/misc/wctc4xxp.ko*
-/lib/modules/%{_kernel_ver}/misc/wctdm.ko*
-/lib/modules/%{_kernel_ver}/misc/wctdm24xxp.ko*
-/lib/modules/%{_kernel_ver}/misc/wcte11xp.ko*
-/lib/modules/%{_kernel_ver}/misc/wcte12xp.ko*
-%if %{with xpp}
-/lib/modules/%{_kernel_ver}/misc/xpd_*.ko*
-/lib/modules/%{_kernel_ver}/misc/xpp.ko*
-/lib/modules/%{_kernel_ver}/misc/xpp_usb.ko*
-%endif
 %endif
