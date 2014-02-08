@@ -168,9 +168,7 @@ Sterownik dla jądra Linuksa do urządzeń telefonicznych DAHDI.\
 
 %define build_kernel_pkg()\
 %if %{with kernel}\
-# hack: build library first (using explicit "lib" target), then modules without cleaning (-c)\
-#build_kernel_modules lib SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi/oct612x DAHDI_INCLUDE=$PWD/../../../include\
-%build_kernel_modules SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi DAHDI_INCLUDE=$PWD/../../include -c\
+%build_kernel_modules SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi DAHDI_INCLUDE=$PWD/../../include\
 cd drivers/dahdi\
 %install_kernel_modules -D ../../installed -m %{modules_in} -d misc\
 cd ../..\
