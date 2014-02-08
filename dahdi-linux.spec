@@ -55,18 +55,18 @@ exit 1
 %define		kpkg	%(echo %{_build_kernels} | tr , '\\n' | while read n ; do echo %%undefine alt_kernel ; [ -z "$n" ] || echo %%define alt_kernel $n ; echo %%kernel_pkg ; done)
 %define		bkpkg	%(echo %{_build_kernels} | tr , '\\n' | while read n ; do echo %%undefine alt_kernel ; [ -z "$n" ] || echo %%define alt_kernel $n ; echo %%build_kernel_pkg ; done)
 
-%define		rel	12
+%define		rel	1
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
 Summary(pl.UTF-8):	Obsługa urządzeń telefonicznych DAHDI
 Name:		%{pname}%{?_pld_builder:%{?with_kernel:-kernel}}%{_alt_kernel}
-Version:	2.7.0.1
+Version:	2.9.0
 Release:	%{rel}%{?_pld_builder:%{?with_kernel:@%{_kernel_ver_str}}}
 License:	GPL v2
 Group:		Base/Kernel
 Source0:	http://downloads.asterisk.org/pub/telephony/dahdi-linux/releases/dahdi-linux-%{version}.tar.gz
-# Source0-md5:	bd91e46c60b6cdcdee95d7b0fec45e32
+# Source0-md5:	8050688193b2a41d6d5dbc6755b1e76d
 Source3:	%{FIRMWARE_URL}/dahdi-fw-oct6114-064-1.05.01.tar.gz
 # Source3-md5:	88db9b7a07d8392736171b1b3e6bcc66
 Source4:	%{FIRMWARE_URL}/dahdi-fw-oct6114-128-1.05.01.tar.gz
@@ -117,20 +117,6 @@ Header files for dahdi interface.
 
 %description devel -l pl.UTF-8
 Pliki nagłówkowe interfejsu dahdi.
-
-%package udev
-Summary:	udev rules for DAHDI kernel modules
-Summary(pl.UTF-8):	Reguły udev dla modułów jądra Linuksa dla DAHDI
-Release:	%{rel}
-Group:		Base/Kernel
-Requires:	dahdi-tools >= 2.2.0
-Requires:	udev-core
-
-%description udev
-udev rules for DAHDI kernel modules.
-
-%description udev -l pl.UTF-8
-Reguły udev dla modułów jądra Linuksa dla DAHDI.
 
 %define	kernel_pkg()\
 %package -n kernel%{_alt_kernel}-%{pname}\
@@ -183,7 +169,7 @@ Sterownik dla jądra Linuksa do urządzeń telefonicznych DAHDI.\
 %define build_kernel_pkg()\
 %if %{with kernel}\
 # hack: build library first (using explicit "lib" target), then modules without cleaning (-c)\
-%build_kernel_modules lib SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi/oct612x DAHDI_INCLUDE=$PWD/../../include\
+#build_kernel_modules lib SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi/oct612x DAHDI_INCLUDE=$PWD/../../../include\
 %build_kernel_modules SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi DAHDI_INCLUDE=$PWD/../../include -c\
 cd drivers/dahdi\
 %install_kernel_modules -D ../../installed -m %{modules_in} -d misc\
@@ -218,9 +204,7 @@ rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT%{_includedir}/dahdi
 
 %if %{with userspace}
-install -d $RPM_BUILD_ROOT/etc/udev/rules.d
-
-%{__make} install-devices install-include \
+%{__make} install-include \
 	DESTDIR=$RPM_BUILD_ROOT
 %endif
 
@@ -235,9 +219,4 @@ rm -rf $RPM_BUILD_ROOT
 %files devel
 %defattr(644,root,root,755)
 %{_includedir}/dahdi
-
-%files udev
-%defattr(644,root,root,755)
-%config(noreplace) %verify(not md5 mtime size) /etc/udev/rules.d/dahdi.rules
-%config(noreplace) %verify(not md5 mtime size) /etc/udev/rules.d/xpp.rules
 %endif
