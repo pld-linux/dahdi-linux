@@ -61,12 +61,12 @@ exit 1
 Summary:	DAHDI telephony device support
 Summary(pl.UTF-8):	Obsługa urządzeń telefonicznych DAHDI
 Name:		%{pname}%{?_pld_builder:%{?with_kernel:-kernel}}%{_alt_kernel}
-Version:	2.9.1.1
+Version:	2.10.0.1
 Release:	%{rel}%{?_pld_builder:%{?with_kernel:@%{_kernel_ver_str}}}
 License:	GPL v2
 Group:		Base/Kernel
 Source0:	http://downloads.asterisk.org/pub/telephony/dahdi-linux/releases/dahdi-linux-%{version}.tar.gz
-# Source0-md5:	f8f1028d3466d5d642c0c51e9e3c7e7c
+# Source0-md5:	a23e91cc474f241616a5a038ae2b1e72
 Source3:	%{FIRMWARE_URL}/dahdi-fw-oct6114-064-1.05.01.tar.gz
 # Source3-md5:	88db9b7a07d8392736171b1b3e6bcc66
 Source4:	%{FIRMWARE_URL}/dahdi-fw-oct6114-128-1.05.01.tar.gz
@@ -77,7 +77,6 @@ Source6:	%{FIRMWARE_URL}/dahdi-fw-tc400m-MR6.12.tar.gz
 # Source6-md5:	2ea860bb8a9d8ede2858b9557b74ee3c
 Source7:	%{FIRMWARE_URL}/dahdi-fw-hx8-2.06.tar.gz
 # Source7-md5:	a7f3886942bb3e9fed349a41b3390c9f
-Patch0:		linux-3.15.patch
 URL:		http://www.asterisk.org/
 BuildRequires:	rpmbuild(macros) >= 1.678
 %{?with_dist_kernel:%{expand:%kbrs}}
@@ -180,7 +179,6 @@ cd ../..\
 
 %prep
 %setup -q -n %{pname}-%{version}
-%patch0 -p1
 
 for a in %{SOURCE3} %{SOURCE4} %{SOURCE5} %{SOURCE6} %{SOURCE7}; do
 	ln -s $a drivers/dahdi/firmware
