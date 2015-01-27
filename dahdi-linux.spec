@@ -11,7 +11,6 @@
 #   unpackaged module: drivers/dahdi/xpp/xpp_usb
 #
 # Conditional build:
-%bcond_without	dist_kernel	# without distribution kernel
 %bcond_without  kernel		# don't build kernel modules
 %bcond_with	oslec		# with Open Source Line Echo Canceller
 %bcond_without	xpp		# without Astribank
@@ -20,10 +19,6 @@
 
 %ifarch alpha
 %undefine	with_xpp
-%endif
-
-%if %{without kernel}
-%undefine	with_dist_kernel
 %endif
 
 # The goal here is to have main, userspace, package built once with
@@ -80,7 +75,7 @@ Source7:	%{FIRMWARE_URL}/dahdi-fw-hx8-2.06.tar.gz
 Patch0:		linux-3.18.patch
 URL:		http://www.asterisk.org/
 BuildRequires:	rpmbuild(macros) >= 1.678
-%{?with_dist_kernel:%{expand:%kbrs}}
+%{?with_kernel:%{expand:%kbrs}}
 BuildRequires:	perl-base
 BuildRequires:	rpmbuild(macros) >= 1.379
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
@@ -126,11 +121,9 @@ Summary(pl.UTF-8):	Sterownik DAHDI dla jądra Linuksa\
 Release:	%{rel}@%{_kernel_ver_str}\
 Group:		Base/Kernel\
 Requires(post,postun):	/sbin/depmod\
-%if %{with dist_kernel}\
 %requires_releq_kernel\
 Requires(postun):	%releq_kernel\
 %{?with_oslec:Requires:	kernel-misc-oslec = 20070608-0.1@%{_kernel_ver_str}}\
-%endif\
 \
 %description -n kernel%{_alt_kernel}-%{pname}\
 DAHDI telephony Linux kernel driver.\
