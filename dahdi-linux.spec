@@ -35,7 +35,7 @@ exit 1
 %define		_enable_debug_packages	0
 %endif
 
-%define		rel	4
+%define		rel	5
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
@@ -57,6 +57,8 @@ Source6:	%{FIRMWARE_URL}/dahdi-fw-tc400m-MR6.12.tar.gz
 # Source6-md5:	2ea860bb8a9d8ede2858b9557b74ee3c
 Source7:	%{FIRMWARE_URL}/dahdi-fw-hx8-2.06.tar.gz
 # Source7-md5:	a7f3886942bb3e9fed349a41b3390c9f
+Patch0:		ignore-void-value.patch
+Patch1:		strnicmp.patch
 URL:		http://www.asterisk.org/
 %{?with_kernel:%{expand:%buildrequires_kernel kernel%%{_alt_kernel}-module-build >= 3:2.6.20.2}}
 BuildRequires:	perl-base
@@ -156,6 +158,8 @@ cd ../..\
 
 %prep
 %setup -q -n %{pname}-%{version}
+%patch0 -p1
+%patch1 -p1
 
 for a in %{SOURCE3} %{SOURCE4} %{SOURCE5} %{SOURCE6} %{SOURCE7}; do
 	ln -s $a drivers/dahdi/firmware
