@@ -1,0 +1,314 @@
+diff -ur dahdi-linux-3.0.0/drivers/dahdi/oct612x/oct612x-user.c dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/oct612x/oct612x-user.c
+--- dahdi-linux-3.0.0/drivers/dahdi/oct612x/oct612x-user.c	2018-11-15 15:03:40.000000000 +0100
++++ dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/oct612x/oct612x-user.c	2019-03-10 17:25:56.529222915 +0100
+@@ -23,6 +23,7 @@
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/slab.h>
++#include <linux/ktime.h>
+ 
+ #include <dahdi/kernel.h>
+ 
+@@ -35,7 +36,16 @@
+ 	unsigned long long total_usecs;
+ 	unsigned int mask = ~0;
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 0, 0)
+ 	do_gettimeofday(&tv);
++#else
++	struct timespec64 now;
++
++	ktime_get_real_ts64(&now);
++
++	tv.tv_sec = now.tv_sec,
++	tv.tv_usec = now.tv_nsec/1000,
++#endif
+ 	total_usecs = (((unsigned long long)(tv.tv_sec)) * 1000000) +
+ 				  (((unsigned long long)(tv.tv_usec)));
+ 	f_pTime->aulWallTimeUs[0] = (total_usecs & mask);
+diff -ur dahdi-linux-3.0.0/drivers/dahdi/xpp/card_fxs.c dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/xpp/card_fxs.c
+--- dahdi-linux-3.0.0/drivers/dahdi/xpp/card_fxs.c	2018-11-15 15:03:40.000000000 +0100
++++ dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/xpp/card_fxs.c	2019-03-10 17:21:25.552851966 +0100
+@@ -1813,7 +1813,7 @@
+ 		BIT_SET(priv->prev_key_down, portnum);
+ 	else
+ 		BIT_CLR(priv->prev_key_down, portnum);
+-	do_gettimeofday(&now);
++	dahdi_gettimeofday(&now);
+ 	if (priv->prev_key_time[portnum].tv_sec != 0)
+ 		msec = usec_diff(&now, &priv->prev_key_time[portnum]) / 1000;
+ 	priv->prev_key_time[portnum] = now;
+diff -ur dahdi-linux-3.0.0/drivers/dahdi/xpp/mmapdrv.c dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/xpp/mmapdrv.c
+--- dahdi-linux-3.0.0/drivers/dahdi/xpp/mmapdrv.c	2018-11-15 15:03:40.000000000 +0100
++++ dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/xpp/mmapdrv.c	2019-03-10 17:22:09.440240245 +0100
+@@ -98,7 +98,7 @@
+ {
+ 	struct timeval tv2;
+ 	long diff;
+-	do_gettimeofday(&tv2);
++	dahdi_gettimeofday(&tv2);
+ 	diff = usec_diff(&tv2, tv1);
+ 	if (c->intr_min > diff)
+ 		c->intr_min = diff;
+@@ -118,7 +118,7 @@
+ 	bool in_use = 0;
+ 	struct timeval tv1;
+ 
+-	do_gettimeofday(&tv1);
++	dahdi_gettimeofday(&tv1);
+ 	if (unlikely(disconnecting))
+ 		return IRQ_HANDLED;
+ 
+@@ -152,7 +152,7 @@
+ 	}
+ 	buf = xframe->packets;
+ 	atomic_set(&xframe->frame_len, rxcnt);
+-	do_gettimeofday(&xframe->tv_received);
++	dahdi_gettimeofday(&xframe->tv_received);
+ #ifdef	DEBUG_VIA_GPIO
+ 	if (rx_intr_counter & 1)
+ 		bfin_write_PORTGIO_SET(DEBUG_GPIO1);
+@@ -223,7 +223,7 @@
+ 	xframe_t *xframe;
+ 	struct timeval tv1;
+ 
+-	do_gettimeofday(&tv1);
++	dahdi_gettimeofday(&tv1);
+ 	if (unlikely(disconnecting)) {
+ 		update_counter(&tx_counter, &tv1);
+ 		return IRQ_HANDLED;
+diff -ur dahdi-linux-3.0.0/drivers/dahdi/xpp/xbus-core.c dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/xpp/xbus-core.c
+--- dahdi-linux-3.0.0/drivers/dahdi/xpp/xbus-core.c	2018-11-15 15:03:40.000000000 +0100
++++ dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/xpp/xbus-core.c	2019-03-10 17:21:32.275918641 +0100
+@@ -259,7 +259,7 @@
+ 	xframe->packets = xframe->first_free = buf;
+ 	xframe->frame_maxlen = maxsize;
+ 	atomic_set(&xframe->frame_len, 0);
+-	do_gettimeofday(&xframe->tv_created);
++	dahdi_gettimeofday(&xframe->tv_created);
+ 	xframe->xframe_magic = XFRAME_MAGIC;
+ }
+ EXPORT_SYMBOL(xframe_init);
+@@ -951,7 +951,7 @@
+ 	unsigned long timediff;
+ 	int res = 0;
+ 
+-	do_gettimeofday(&time_start);
++	dahdi_gettimeofday(&time_start);
+ 	XBUS_DBG(DEVICES, xbus, "refcount_xbus=%d\n", refcount_xbus(xbus));
+ 	if (xbus_aquire_xpds(xbus) < 0)	/* Until end of initialization */
+ 		return -EBUSY;
+@@ -989,7 +989,7 @@
+ 		}
+ 	}
+ 	xbus_echocancel(xbus, 1);
+-	do_gettimeofday(&time_end);
++	dahdi_gettimeofday(&time_end);
+ 	timediff = usec_diff(&time_end, &time_start);
+ 	timediff /= 1000 * 100;
+ 	XBUS_INFO(xbus, "Initialized in %ld.%1ld sec\n", timediff / 10,
+diff -ur dahdi-linux-3.0.0/drivers/dahdi/xpp/xbus-pcm.c dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/xpp/xbus-pcm.c
+--- dahdi-linux-3.0.0/drivers/dahdi/xpp/xbus-pcm.c	2018-11-15 15:03:40.000000000 +0100
++++ dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/xpp/xbus-pcm.c	2019-03-10 17:22:03.353902118 +0100
+@@ -111,7 +111,7 @@
+ {
+ 	memset(ticker, 0, sizeof(*ticker));
+ 	spin_lock_init(&ticker->lock);
+-	do_gettimeofday(&ticker->last_sample.tv);
++	dahdi_gettimeofday(&ticker->last_sample.tv);
+ 	ticker->first_sample = ticker->last_sample;
+ 	ticker_set_cycle(ticker, SYNC_ADJ_QUICK);
+ }
+@@ -147,7 +147,7 @@
+ {
+ 	struct xpp_drift *di = &xbus->drift;
+ 
+-	do_gettimeofday(&di->last_lost_tick.tv);
++	dahdi_gettimeofday(&di->last_lost_tick.tv);
+ 	ticker_set_cycle(&xbus->ticker, SYNC_ADJ_QUICK);
+ 	di->max_speed = -SYNC_ADJ_MAX;
+ 	di->min_speed = SYNC_ADJ_MAX;
+@@ -359,7 +359,7 @@
+ 	struct timeval now;
+ 
+ 	BUG_ON(!xbus);
+-	do_gettimeofday(&now);
++	dahdi_gettimeofday(&now);
+ 	xbus_command_queue_tick(xbus);
+ 	if (!xbus->self_ticking) /* Must be 1KHz rate */
+ 		mod_timer(&xbus->command_timer, jiffies + 1);
+@@ -493,7 +493,7 @@
+ 	const char *msg;
+ 
+ 	BUG_ON(abs(drift) > SYNC_ADJ_MAX);
+-	do_gettimeofday(&now);
++	dahdi_gettimeofday(&now);
+ 	if (drift > xbus->sync_adjustment)
+ 		msg = "up";
+ 	else
+@@ -512,7 +512,7 @@
+ {
+ 	struct timeval now;
+ 
+-	do_gettimeofday(&now);
++	dahdi_gettimeofday(&now);
+ 	atomic_inc(&xpp_tick_counter);
+ 	if ((atomic_read(&xpp_tick_counter) % BIG_TICK_INTERVAL) == 0)
+ 		reset_sync_counters();
+@@ -529,7 +529,7 @@
+ 
+ 	if (!force_dahdi_sync)
+ 		goto noop;
+-	do_gettimeofday(&now);
++	dahdi_gettimeofday(&now);
+ 	BUG_ON(!xpd);
+ 	/*
+ 	 * Detect if any of our spans is dahdi sync master
+@@ -858,7 +858,7 @@
+ 	unsigned long usec;
+ 
+ 	spin_lock_irqsave(&xbus->lock, flags);
+-	do_gettimeofday(&now);
++	dahdi_gettimeofday(&now);
+ 	if (unlikely(disable_pcm || !XBUS_IS(xbus, READY)))
+ 		goto dropit;
+ 	if (XPACKET_ADDR_SYNC((xpacket_t *)xframe->packets)) {
+@@ -1190,7 +1190,7 @@
+ 			struct timeval now;
+ 			unsigned long usec;
+ 
+-			do_gettimeofday(&now);
++			dahdi_gettimeofday(&now);
+ 			usec = usec_diff(&now, &xbus->last_rx_sync);
+ 			xbus->last_rx_sync = now;
+ 			/* ignore startup statistics */
+diff -ur dahdi-linux-3.0.0/drivers/dahdi/xpp/xbus-sysfs.c dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/xpp/xbus-sysfs.c
+--- dahdi-linux-3.0.0/drivers/dahdi/xpp/xbus-sysfs.c	2018-11-15 15:03:40.000000000 +0100
++++ dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/xpp/xbus-sysfs.c	2019-03-10 17:21:50.234682483 +0100
+@@ -119,7 +119,7 @@
+ 	int len = 0;
+ 	struct timeval now;
+ 
+-	do_gettimeofday(&now);
++	dahdi_gettimeofday(&now);
+ 	xbus = dev_to_xbus(dev);
+ 	driftinfo = &xbus->drift;
+ 	len +=
+@@ -244,7 +244,7 @@
+ 	/*
+ 	 * Calculate lost ticks time
+ 	 */
+-	do_gettimeofday(&now);
++	dahdi_gettimeofday(&now);
+ 	seconds = now.tv_sec - di->last_lost_tick.tv.tv_sec;
+ 	minutes = seconds / 60;
+ 	seconds = seconds % 60;
+diff -ur dahdi-linux-3.0.0/drivers/dahdi/xpp/xdefs.h dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/xpp/xdefs.h
+--- dahdi-linux-3.0.0/drivers/dahdi/xpp/xdefs.h	2018-11-15 15:03:40.000000000 +0100
++++ dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/xpp/xdefs.h	2019-03-10 17:20:21.366124794 +0100
+@@ -102,6 +102,24 @@
+ typedef char *charp;
+ #ifdef __KERNEL__
+ 
++#include <linux/ktime.h>
++
++static inline void dahdi_gettimeofday(struct timeval *tv)
++{
++#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 0, 0)
++    do_gettimeofday(tv);
++#else
++    struct timespec64 now;
++
++    ktime_get_real_ts64(&now);
++
++    *tv = (struct timeval) {
++        .tv_sec = now.tv_sec,
++        .tv_usec = now.tv_nsec/1000,
++    };
++#endif
++}
++
+ /* Kernel versions... */
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 20)
+ #define	KMEM_CACHE_T	kmem_cache_t
+diff -ur dahdi-linux-3.0.0/drivers/dahdi/xpp/xframe_queue.c dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/xpp/xframe_queue.c
+--- dahdi-linux-3.0.0/drivers/dahdi/xpp/xframe_queue.c	2018-11-15 15:03:40.000000000 +0100
++++ dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/xpp/xframe_queue.c	2019-03-10 17:21:39.362073649 +0100
+@@ -36,7 +36,7 @@
+ 	char prefix[30];
+ 	struct timeval now;
+ 
+-	do_gettimeofday(&now);
++	dahdi_gettimeofday(&now);
+ 	printk(KERN_DEBUG "%s: dump queue '%s' (first packet in each frame)\n",
+ 	       THIS_MODULE->name, q->name);
+ 	list_for_each_entry_reverse(xframe, &q->head, frame_list) {
+@@ -75,7 +75,7 @@
+ 	if (++q->count > q->worst_count)
+ 		q->worst_count = q->count;
+ 	list_add_tail(&xframe->frame_list, &q->head);
+-	do_gettimeofday(&xframe->tv_queued);
++	dahdi_gettimeofday(&xframe->tv_queued);
+ out:
+ 	return ret;
+ }
+@@ -105,7 +105,7 @@
+ 	list_del_init(h);
+ 	--q->count;
+ 	frm = list_entry(h, xframe_t, frame_list);
+-	do_gettimeofday(&now);
++	dahdi_gettimeofday(&now);
+ 	usec_lag =
+ 	    (now.tv_sec - frm->tv_queued.tv_sec) * 1000 * 1000 + (now.tv_usec -
+ 								  frm->
+@@ -284,7 +284,7 @@
+ 	BUG_ON(xframe->xframe_magic != XFRAME_MAGIC);
+ 	atomic_set(&xframe->frame_len, 0);
+ 	xframe->first_free = xframe->packets;
+-	do_gettimeofday(&xframe->tv_created);
++	dahdi_gettimeofday(&xframe->tv_created);
+ 	/*
+ 	 * If later parts bother to correctly initialize their
+ 	 * headers, there is no need to memset() the whole data.
+diff -ur dahdi-linux-3.0.0/drivers/dahdi/xpp/xpp_usb.c dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/xpp/xpp_usb.c
+--- dahdi-linux-3.0.0/drivers/dahdi/xpp/xpp_usb.c	2018-11-15 15:03:40.000000000 +0100
++++ dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/xpp/xpp_usb.c	2019-03-10 17:21:21.809121833 +0100
+@@ -377,7 +377,7 @@
+ 	BUG_ON(!urb);
+ 	/* update urb length */
+ 	urb->transfer_buffer_length = XFRAME_LEN(xframe);
+-	do_gettimeofday(&xframe->tv_submitted);
++	dahdi_gettimeofday(&xframe->tv_submitted);
+ 	ret = usb_submit_urb(urb, GFP_ATOMIC);
+ 	if (ret < 0) {
+ 		static int rate_limit;
+@@ -887,7 +887,7 @@
+ 	}
+ 	//flip_parport_bit(6);
+ 	atomic_dec(&xusb->pending_writes);
+-	do_gettimeofday(&now);
++	dahdi_gettimeofday(&now);
+ 	xusb->last_tx = xframe->tv_submitted;
+ 	usec = usec_diff(&now, &xframe->tv_submitted);
+ 	if (usec < 0)
+@@ -945,7 +945,7 @@
+ 	bool do_resubmit = 1;
+ 	struct timeval now;
+ 
+-	do_gettimeofday(&now);
++	dahdi_gettimeofday(&now);
+ 	atomic_dec(&xusb->pending_reads);
+ 	if (!xbus) {
+ 		XUSB_ERR(xusb,
+diff -ur dahdi-linux-3.0.0/drivers/dahdi/xpp/xproto.c dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/xpp/xproto.c
+--- dahdi-linux-3.0.0/drivers/dahdi/xpp/xproto.c	2018-11-15 15:03:40.000000000 +0100
++++ dahdi-linux-3.0.0-kernel-5.0/drivers/dahdi/xpp/xproto.c	2019-03-10 17:22:13.450035055 +0100
+@@ -315,7 +315,7 @@
+ 		ret = xframe_receive_cmd(xbus, xframe);
+ 	}
+ 	/* Calculate total processing time */
+-	do_gettimeofday(&now);
++	dahdi_gettimeofday(&now);
+ 	usec =
+ 	    (now.tv_sec - tv_received.tv_sec) * 1000000 + now.tv_usec -
+ 	    tv_received.tv_usec;

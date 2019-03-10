@@ -57,6 +57,7 @@ Source6:	%{FIRMWARE_URL}/dahdi-fw-tc400m-MR6.12.tar.gz
 # Source6-md5:	2ea860bb8a9d8ede2858b9557b74ee3c
 Source7:	%{FIRMWARE_URL}/dahdi-fw-hx8-2.06.tar.gz
 # Source7-md5:	a7f3886942bb3e9fed349a41b3390c9f
+Patch0:		kernel-5.0.patch
 URL:		http://www.asterisk.org/
 %{?with_kernel:%{expand:%buildrequires_kernel kernel%%{_alt_kernel}-module-build >= 3:2.6.20.2}}
 BuildRequires:	perl-base
@@ -69,10 +70,11 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 # - keep X and X_in in sync
 # - X is used for actual building (entries separated with space), X_in for pld macros (entries separated with comma)
 
-%define	modules_1	dahdi.o dahdi_dynamic.o dahdi_dynamic_eth.o dahdi_dynamic_ethmf.o dahdi_dynamic_loc.o dahdi_echocan_jpah.o dahdi_echocan_kb1.o dahdi_echocan_mg2.o dahdi_echocan_sec.o dahdi_echocan_sec2.o pciradio.o tor2.o wcfxo.o wct1xxp.o wctdm.o wcte11xp.o
-%define	modules_1_in	dahdi,dahdi_dynamic,dahdi_dynamic_eth,dahdi_dynamic_ethmf,dahdi_dynamic_loc,dahdi_echocan_jpah,dahdi_echocan_kb1,dahdi_echocan_mg2,dahdi_echocan_sec,dahdi_echocan_sec2,pciradio,tor2,wcfxo,wct1xxp,wctdm,wcte11xp
-%define	modules_2	voicebus/ wct4xxp/ wcte12xp/ %{?with_xpp:xpp/}
-%define	modules_2_in	voicebus/dahdi_voicebus,wct4xxp/wct4xxp,wcte12xp/wcte12xp,%{?with_xpp:xpp/xpd_bri,xpp/xpd_echo,xpp/xpd_fxo,xpp/xpd_fxs,xpp/xpd_pri,xpp/xpp,xpp/xpp_usb}
+%define	modules_1	dahdi.o dahdi_dynamic.o dahdi_dynamic_eth.o dahdi_dynamic_ethmf.o dahdi_dynamic_loc.o dahdi_echocan_jpah.o dahdi_echocan_kb1.o dahdi_echocan_mg2.o dahdi_echocan_sec.o dahdi_echocan_sec2.o wcaxx.o wcte13xp.o wcte43x.o
+%define	modules_1_in	dahdi,dahdi_dynamic,dahdi_dynamic_eth,dahdi_dynamic_ethmf,dahdi_dynamic_loc,dahdi_echocan_jpah,dahdi_echocan_kb1,dahdi_echocan_mg2,dahdi_echocan_sec,dahdi_echocan_sec2,wcaxx,wcte13xp,wcte43x
+%define	modules_2	voicebus/ oct612x/ wct4xxp/ %{?with_xpp:xpp/}
+%define	modules_2_in	voicebus/dahdi_voicebus,oct612x/oct612x,wct4xxp/wct4xxp,%{?with_xpp:xpp/xpd_bri,xpp/xpd_echo,xpp/xpd_fxo,xpp/xpd_fxs,xpp/xpd_pri,xpp/xpp,xpp/xpp_usb}
+
 %ifnarch alpha
 %define	modules_nalpha	wctc4xxp/ wctdm24xxp/ dahdi_transcode.o wcb4xxp/
 %define	modules_nalpha_in	wctc4xxp/wctc4xxp,wctdm24xxp/wctdm24xxp,dahdi_transcode,wcb4xxp/wcb4xxp
@@ -118,17 +120,14 @@ Sterownik dla jądra Linuksa do urządzeń telefonicznych DAHDI.\
 %files -n kernel%{_alt_kernel}-%{pname}\
 %defattr(644,root,root,755)\
 /lib/modules/%{_kernel_ver}/misc/dahdi*.ko*\
-/lib/modules/%{_kernel_ver}/misc/pciradio.ko*\
-/lib/modules/%{_kernel_ver}/misc/tor2.ko*\
 /lib/modules/%{_kernel_ver}/misc/wcb4xxp.ko*\
-/lib/modules/%{_kernel_ver}/misc/wcfxo.ko*\
-/lib/modules/%{_kernel_ver}/misc/wct1xxp.ko*\
 /lib/modules/%{_kernel_ver}/misc/wct4xxp.ko*\
 /lib/modules/%{_kernel_ver}/misc/wctc4xxp.ko*\
-/lib/modules/%{_kernel_ver}/misc/wctdm.ko*\
 /lib/modules/%{_kernel_ver}/misc/wctdm24xxp.ko*\
-/lib/modules/%{_kernel_ver}/misc/wcte11xp.ko*\
-/lib/modules/%{_kernel_ver}/misc/wcte12xp.ko*\
+/lib/modules/%{_kernel_ver}/misc/wcte13xp.ko*\
+/lib/modules/%{_kernel_ver}/misc/oct612x.ko*\
+/lib/modules/%{_kernel_ver}/misc/wcaxx.ko*\
+/lib/modules/%{_kernel_ver}/misc/wcte43x.ko*\
 %if %{with xpp}\
 /lib/modules/%{_kernel_ver}/misc/xpd_*.ko*\
 /lib/modules/%{_kernel_ver}/misc/xpp.ko*\
@@ -156,6 +155,7 @@ cd ../..\
 
 %prep
 %setup -q -n %{pname}-%{version}
+%patch0 -p1
 
 for a in %{SOURCE3} %{SOURCE4} %{SOURCE5} %{SOURCE6} %{SOURCE7}; do
 	ln -s $a drivers/dahdi/firmware
