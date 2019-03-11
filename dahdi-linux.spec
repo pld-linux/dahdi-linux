@@ -35,7 +35,7 @@ exit 1
 %define		_enable_debug_packages	0
 %endif
 
-%define		rel	0.1
+%define		rel	1
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
