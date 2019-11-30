@@ -1,0 +1,14 @@
+--- dahdi-linux-3.1.0/include/dahdi/kernel.h~	2019-11-30 23:36:28.000000000 +0100
++++ dahdi-linux-3.1.0/include/dahdi/kernel.h	2019-11-30 23:36:58.436460522 +0100
+@@ -58,9 +58,11 @@
+ 
+ #include <linux/poll.h>
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)
+ #ifdef CONFIG_PCI
+ #include <linux/pci-aspm.h>
+ #endif
++#endif
+ 
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+ #define HAVE_NET_DEVICE_OPS
