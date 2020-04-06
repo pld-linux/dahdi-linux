@@ -35,7 +35,7 @@ exit 1
 %define		_enable_debug_packages	0
 %endif
 
-%define		rel	2
+%define		rel	3
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
@@ -60,6 +60,7 @@ Source7:	%{FIRMWARE_URL}/dahdi-fw-hx8-2.06.tar.gz
 Patch0:		kernel-4.14.patch
 Patch1:		kernel-5.4.patch
 Patch2:		math64.patch
+Patch3:		kernel-5.6.patch
 URL:		http://www.asterisk.org/
 %{?with_kernel:%{expand:%buildrequires_kernel kernel%%{_alt_kernel}-module-build >= 3:2.6.20.2}}
 BuildRequires:	perl-base
@@ -162,6 +163,7 @@ cd ../..\
 %ifarch %{ix86}
 %patch2 -p1
 %endif
+%patch3 -p1
 
 for a in %{SOURCE3} %{SOURCE4} %{SOURCE5} %{SOURCE6} %{SOURCE7}; do
 	ln -s $a drivers/dahdi/firmware
