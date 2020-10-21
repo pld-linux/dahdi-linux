@@ -61,6 +61,7 @@ Patch0:		kernel-4.14.patch
 Patch1:		kernel-5.4.patch
 Patch2:		math64.patch
 Patch3:		kernel-5.6.patch
+Patch4:		kernel-5.9.patch
 URL:		http://www.asterisk.org/
 %{?with_kernel:%{expand:%buildrequires_kernel kernel%%{_alt_kernel}-module-build >= 3:2.6.20.2}}
 BuildRequires:	perl-base
@@ -164,6 +165,7 @@ cd ../..\
 %patch2 -p1
 %endif
 %patch3 -p1
+%patch4 -p1
 
 for a in %{SOURCE3} %{SOURCE4} %{SOURCE5} %{SOURCE6} %{SOURCE7}; do
 	ln -s $a drivers/dahdi/firmware
