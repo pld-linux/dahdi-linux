@@ -35,7 +35,7 @@ exit 1
 %define		_enable_debug_packages	0
 %endif
 
-%define		rel	5
+%define		rel	6
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
@@ -63,6 +63,7 @@ Patch2:		math64.patch
 Patch3:		kernel-5.6.patch
 Patch4:		kernel-5.9.patch
 Patch5:		kernel-4.9.256.patch
+Patch6:		nostdinc.patch
 URL:		http://www.asterisk.org/
 %{?with_kernel:%{expand:%buildrequires_kernel kernel%%{_alt_kernel}-module-build >= 3:2.6.20.2}}
 BuildRequires:	perl-base
@@ -149,7 +150,7 @@ Sterownik dla jądra Linuksa do urządzeń telefonicznych DAHDI.\
 
 %define build_kernel_pkg()\
 %if %{with kernel}\
-%build_kernel_modules SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi DAHDI_INCLUDE=$PWD/../../include\
+%build_kernel_modules V=1 SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi DAHDI_INCLUDE=$PWD/../../include\
 cd drivers/dahdi\
 %install_kernel_modules -D ../../installed -m %{modules_in} -d misc\
 cd ../..\
@@ -168,6 +169,7 @@ cd ../..\
 %patch3 -p1
 %patch4 -p1
 %patch5 -p1
+%patch6 -p1
 
 for a in %{SOURCE3} %{SOURCE4} %{SOURCE5} %{SOURCE6} %{SOURCE7}; do
 	ln -s $a drivers/dahdi/firmware
