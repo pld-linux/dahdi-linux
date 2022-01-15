@@ -30,12 +30,10 @@
 exit 1
 %endif
 
-%if %{without userspace}
 # nothing to be placed to debuginfo package
 %define		_enable_debug_packages	0
-%endif
 
-%define		rel	6
+%define		rel	7
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
