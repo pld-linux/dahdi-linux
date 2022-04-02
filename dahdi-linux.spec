@@ -33,7 +33,7 @@ exit 1
 # nothing to be placed to debuginfo package
 %define		_enable_debug_packages	0
 
-%define		rel	7
+%define		rel	8
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
@@ -62,6 +62,7 @@ Patch3:		kernel-5.6.patch
 Patch4:		kernel-5.9.patch
 Patch5:		kernel-4.9.256.patch
 Patch6:		nostdinc.patch
+Patch7:		kernel-5.17.patch
 URL:		http://www.asterisk.org/
 %{?with_kernel:%{expand:%buildrequires_kernel kernel%%{_alt_kernel}-module-build >= 3:2.6.20.2}}
 BuildRequires:	perl-base
@@ -168,6 +169,7 @@ cd ../..\
 %patch4 -p1
 %patch5 -p1
 %patch6 -p1
+%patch7 -p1
 
 for a in %{SOURCE3} %{SOURCE4} %{SOURCE5} %{SOURCE6} %{SOURCE7}; do
 	ln -s $a drivers/dahdi/firmware
