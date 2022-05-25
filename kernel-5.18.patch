@@ -1,0 +1,219 @@
+diff -ur dahdi-linux-3.1.0/drivers/dahdi/voicebus/voicebus.c dahdi-linux-3.1.0-5.18/drivers/dahdi/voicebus/voicebus.c
+--- dahdi-linux-3.1.0/drivers/dahdi/voicebus/voicebus.c	2019-10-03 16:48:09.000000000 +0200
++++ dahdi-linux-3.1.0-5.18/drivers/dahdi/voicebus/voicebus.c	2022-05-25 16:18:38.185204828 +0200
+@@ -260,8 +260,13 @@
+ 		dl->padding = 0;
+ 	}
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
++	dl->desc = dma_alloc_coherent(&vb->pdev->dev,
++		(sizeof(*d) + dl->padding) * DRING_SIZE, &dl->desc_dma, GFP_ATOMIC);
++#else
+ 	dl->desc = pci_alloc_consistent(vb->pdev,
+ 		(sizeof(*d) + dl->padding) * DRING_SIZE, &dl->desc_dma);
++#endif
+ 	if (!dl->desc)
+ 		return -ENOMEM;
+ 
+@@ -311,9 +316,15 @@
+ 		dl->padding = 0;
+ 	}
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
++	dl->desc = dma_alloc_coherent(&vb->pdev->dev,
++					(sizeof(*d) + dl->padding) *
++					DRING_SIZE, &dl->desc_dma, GFP_ATOMIC);
++#else
+ 	dl->desc = pci_alloc_consistent(vb->pdev,
+ 					(sizeof(*d) + dl->padding) *
+ 					DRING_SIZE, &dl->desc_dma);
++#endif
+ 	if (!dl->desc)
+ 		return -ENOMEM;
+ 
+@@ -544,10 +555,17 @@
+ 		return;
+ 	}
+ 	vb_cleanup_descriptors(vb, dl);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
++	dma_free_coherent(
++		&vb->pdev->dev,
++		(sizeof(struct voicebus_descriptor)+dl->padding)*DRING_SIZE,
++		dl->desc, dl->desc_dma);
++#else
+ 	pci_free_consistent(
+ 		vb->pdev,
+ 		(sizeof(struct voicebus_descriptor)+dl->padding)*DRING_SIZE,
+ 		dl->desc, dl->desc_dma);
++#endif
+ 	while (!list_empty(&vb->free_rx)) {
+ 		vbb = list_entry(vb->free_rx.next, struct vbb, entry);
+ 		list_del(&vbb->entry);
+@@ -1783,7 +1801,11 @@
+ 	/* ----------------------------------------------------------------
+ 	   Configure the hardware / kernel module interfaces.
+ 	   ---------------------------------------------------------------- */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
++	if (dma_set_mask(&vb->pdev->dev, DMA_BIT_MASK(32))) {
++#else
+ 	if (pci_set_dma_mask(vb->pdev, DMA_BIT_MASK(32))) {
++#endif
+ 		dev_err(&vb->pdev->dev, "No suitable DMA available.\n");
+ 		goto cleanup;
+ 	}
+@@ -1826,7 +1848,11 @@
+ 	/* ----------------------------------------------------------------
+ 	   Configure the hardware interface.
+ 	   ---------------------------------------------------------------- */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
++	if (dma_set_mask(&vb->pdev->dev, DMA_BIT_MASK(32))) {
++#else
+ 	if (pci_set_dma_mask(vb->pdev, DMA_BIT_MASK(32))) {
++#endif
+ 		dev_warn(&vb->pdev->dev, "No suitable DMA available.\n");
+ 		goto cleanup;
+ 	}
+diff -ur dahdi-linux-3.1.0/drivers/dahdi/wct4xxp/base.c dahdi-linux-3.1.0-5.18/drivers/dahdi/wct4xxp/base.c
+--- dahdi-linux-3.1.0/drivers/dahdi/wct4xxp/base.c	2019-10-03 16:48:09.000000000 +0200
++++ dahdi-linux-3.1.0-5.18/drivers/dahdi/wct4xxp/base.c	2022-05-25 16:07:49.747890034 +0200
+@@ -3849,8 +3849,13 @@
+ 	dma_addr_t writedma;
+ 
+ 	/* 32 channels, Double-buffer, Read/Write, 4 spans */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
++	alloc = dma_alloc_coherent(&wc->dev->dev, numbufs * T4_BASE_SIZE(wc) * 2,
++				   &writedma, GFP_ATOMIC);
++#else
+ 	alloc = pci_alloc_consistent(wc->dev, numbufs * T4_BASE_SIZE(wc) * 2,
+ 				     &writedma);
++#endif
+ 
+ 	if (!alloc) {
+ 		dev_notice(&wc->dev->dev, "wct%dxxp: Unable to allocate "
+@@ -3928,8 +3933,13 @@
+ 
+ 	spin_unlock_irqrestore(&wc->reglock, flags);
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
++	dma_free_coherent(&wc->dev->dev, T4_BASE_SIZE(wc) * oldbufs * 2,
++			    oldalloc, oldaddr);
++#else
+ 	pci_free_consistent(wc->dev, T4_BASE_SIZE(wc) * oldbufs * 2,
+ 			    oldalloc, oldaddr);
++#endif
+ 
+ 	dev_info(&wc->dev->dev, "Increased latency to %d\n", newlatency);
+ 
+@@ -5122,8 +5132,13 @@
+ 		 * up first */
+ 		pci_iounmap(wc->dev, wc->membase);
+ 		pci_release_regions(wc->dev);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
++		dma_free_coherent(&wc->dev->dev, T4_BASE_SIZE(wc) * wc->numbufs * 2,
++			    wc->writechunk, wc->writedma);
++#else
+ 		pci_free_consistent(wc->dev, T4_BASE_SIZE(wc) * wc->numbufs * 2,
+ 			    wc->writechunk, wc->writedma);
++#endif
+ 		pci_set_drvdata(wc->dev, NULL);
+ 		free_wc(wc);
+ 		return res;
+@@ -5302,8 +5317,13 @@
+ 	pci_release_regions(wc->dev);
+ 	
+ 	/* Immediately free resources */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
++	dma_free_coherent(&wc->dev->dev, T4_BASE_SIZE(wc) * wc->numbufs * 2,
++			    wc->writechunk, wc->writedma);
++#else
+ 	pci_free_consistent(wc->dev, T4_BASE_SIZE(wc) * wc->numbufs * 2,
+ 			    wc->writechunk, wc->writedma);
++#endif
+ 	
+ 	order_index[wc->order]--;
+ 	
+diff -ur dahdi-linux-3.1.0/drivers/dahdi/wctc4xxp/base.c dahdi-linux-3.1.0-5.18/drivers/dahdi/wctc4xxp/base.c
+--- dahdi-linux-3.1.0/drivers/dahdi/wctc4xxp/base.c	2019-10-03 16:48:09.000000000 +0200
++++ dahdi-linux-3.1.0-5.18/drivers/dahdi/wctc4xxp/base.c	2022-05-25 16:17:03.706798317 +0200
+@@ -822,8 +822,13 @@
+ 	if (!dr->pending)
+ 		return -ENOMEM;
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
++	dr->desc = dma_alloc_coherent(&pdev->dev,
++			(sizeof(*d)+dr->padding)*dr->size, &dr->desc_dma, GFP_ATOMIC);
++#else
+ 	dr->desc = pci_alloc_consistent(pdev,
+ 			(sizeof(*d)+dr->padding)*dr->size, &dr->desc_dma);
++#endif
+ 	if (!dr->desc) {
+ 		kfree(dr->pending);
+ 		return -ENOMEM;
+@@ -873,8 +878,13 @@
+ 	}
+ 	d->des1 &= cpu_to_le32(~(BUFFER1_SIZE_MASK));
+ 	d->des1 |= cpu_to_le32(len & BUFFER1_SIZE_MASK);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
++	d->buffer1 = cpu_to_le32(dma_map_single(&dr->pdev->dev, c->data,
++			SFRAME_SIZE, dr->direction));
++#else
+ 	d->buffer1 = cpu_to_le32(pci_map_single(dr->pdev, c->data,
+ 			SFRAME_SIZE, dr->direction));
++#endif
+ 
+ 	SET_OWNED(d); /* That's it until the hardware is done with it. */
+ 	dr->pending[dr->tail] = c;
+@@ -895,8 +905,13 @@
+ 	spin_lock_irqsave(&dr->lock, flags);
+ 	d = wctc4xxp_descriptor(dr, head);
+ 	if (d->buffer1 && !OWNED(d)) {
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
++		dma_unmap_single(&dr->pdev->dev, le32_to_cpu(d->buffer1),
++			SFRAME_SIZE, dr->direction);
++#else
+ 		pci_unmap_single(dr->pdev, le32_to_cpu(d->buffer1),
+ 			SFRAME_SIZE, dr->direction);
++#endif
+ 		c = dr->pending[head];
+ 		WARN_ON(!c);
+ 		dr->head = (++head) & (dr->size-1);
+@@ -1575,8 +1590,13 @@
+ 	for (i = 0; i < dr->size; ++i) {
+ 		d = wctc4xxp_descriptor(dr, i);
+ 		if (d->buffer1) {
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
++			dma_unmap_single(&dr->pdev->dev, d->buffer1,
++				SFRAME_SIZE, dr->direction);
++#else
+ 			pci_unmap_single(dr->pdev, d->buffer1,
+ 				SFRAME_SIZE, dr->direction);
++#endif
+ 			d->buffer1 = 0;
+ 			/* Commands will also be sitting on the waiting for
+ 			 * response list, so we want to make sure to delete
+@@ -1589,8 +1609,13 @@
+ 	dr->head = 0;
+ 	dr->tail = 0;
+ 	dr->count = 0;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
++	dma_free_coherent(&dr->pdev->dev, (sizeof(*d)+dr->padding) * dr->size,
++		dr->desc, dr->desc_dma);
++#else
+ 	pci_free_consistent(dr->pdev, (sizeof(*d)+dr->padding) * dr->size,
+ 		dr->desc, dr->desc_dma);
++#endif
+ 	kfree(dr->pending);
+ }
+ 
+@@ -3940,7 +3965,11 @@
+ 	INIT_WORK(&wc->deferred_work, deferred_work_func);
+ 	init_waitqueue_head(&wc->waitq);
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
++	if (dma_set_mask(&wc->pdev->dev, DMA_BIT_MASK(32))) {
++#else
+ 	if (pci_set_dma_mask(wc->pdev, DMA_BIT_MASK(32))) {
++#endif
+ 		release_mem_region(pci_resource_start(wc->pdev, 1),
+ 			pci_resource_len(wc->pdev, 1));
+ 		if (wc->iobase)
