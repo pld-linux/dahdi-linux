@@ -1,14 +1,6 @@
 #
 # TODO:
 # - IMPORTANT rename: http://www.asterisk.org/zaptel-to-dahdi
-# - Fix --without xpp:
-#   + check_modules
-#   unpackaged module: drivers/dahdi/xpp/xpd_bri
-#   unpackaged module: drivers/dahdi/xpp/xpd_fxo
-#   unpackaged module: drivers/dahdi/xpp/xpd_fxs
-#   unpackaged module: drivers/dahdi/xpp/xpd_pri
-#   unpackaged module: drivers/dahdi/xpp/xpp
-#   unpackaged module: drivers/dahdi/xpp/xpp_usb
 #
 # Conditional build:
 %bcond_without  kernel		# don't build kernel modules
@@ -58,6 +50,7 @@ Source7:	%{FIRMWARE_URL}/dahdi-fw-hx8-2.06.tar.gz
 Patch0:		kernel-4.14.patch
 Patch1:		kernel-5.18.patch
 Patch2:		kernel-6.1.patch
+Patch3:		no-xpp.patch
 URL:		http://www.asterisk.org/
 %{?with_kernel:%{expand:%buildrequires_kernel kernel%%{_alt_kernel}-module-build >= 3:2.6.20.2}}
 BuildRequires:	perl-base
@@ -158,6 +151,9 @@ cd ../..\
 %patch0 -p1
 %patch1 -p1
 %patch2 -p1
+%if %{without xpp}
+%patch3 -p1
+%endif
 
 for a in %{SOURCE3} %{SOURCE4} %{SOURCE5} %{SOURCE6} %{SOURCE7}; do
 	ln -s $a drivers/dahdi/firmware

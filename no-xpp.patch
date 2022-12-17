@@ -1,0 +1,30 @@
+--- dahdi-linux-3.2.0/drivers/dahdi/xpp/Kconfig~	2022-09-22 14:23:24.000000000 +0200
++++ dahdi-linux-3.2.0/drivers/dahdi/xpp/Kconfig	2022-12-17 20:36:07.668645726 +0100
+@@ -5,7 +5,7 @@
+ menuconfig DAHDI_XPP
+ 	tristate "Xorcom Astribank Support"
+ 	depends on DAHDI
+-	default DAHDI
++	default n
+ 	---help---
+ 	  Infrastructure support for Xorcom Astribank products.
+ 
+--- dahdi-linux-3.2.0/drivers/dahdi/Kbuild~	2022-09-22 14:23:24.000000000 +0200
++++ dahdi-linux-3.2.0/drivers/dahdi/Kbuild	2022-12-17 20:38:05.611879322 +0100
+@@ -41,8 +41,6 @@
+ 
+ endif
+ 
+-obj-$(DAHDI_BUILD_ALL)$(CONFIG_DAHDI_XPP)		+= xpp/
+-
+ obj-$(DAHDI_BUILD_ALL)$(CONFIG_DAHDI_ECHOCAN_JPAH)	+= dahdi_echocan_jpah.o
+ obj-$(DAHDI_BUILD_ALL)$(CONFIG_DAHDI_ECHOCAN_STEVE)	+= dahdi_echocan_sec.o
+ obj-$(DAHDI_BUILD_ALL)$(CONFIG_DAHDI_ECHOCAN_STEVE2)	+= dahdi_echocan_sec2.o
+--- dahdi-linux-3.2.0/drivers/dahdi/Kconfig~	2022-09-22 14:23:24.000000000 +0200
++++ dahdi-linux-3.2.0/drivers/dahdi/Kconfig	2022-12-17 20:38:16.388535301 +0100
+@@ -222,5 +222,3 @@
+ 
+ 	  If unsure, say Y.
+ 
+-
+-source "drivers/dahdi/xpp/Kconfig"
