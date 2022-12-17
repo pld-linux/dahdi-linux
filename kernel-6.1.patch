@@ -1,0 +1,28 @@
+--- dahdi-linux-3.2.0/drivers/dahdi/voicebus/voicebus_net.c~	2022-09-22 14:23:24.000000000 +0200
++++ dahdi-linux-3.2.0/drivers/dahdi/voicebus/voicebus_net.c	2022-12-17 18:55:22.078293527 +0100
+@@ -202,7 +202,11 @@
+ 
+ 	netdev->promiscuity = 0;
+ 	netdev->flags |= IFF_NOARP;
++#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0)
+ 	netif_napi_add(netdev, &vb->napi, vb_net_poll, 64);
++#else
++	netif_napi_add(netdev, &vb->napi, vb_net_poll);
++#endif
+ 
+ 	skb_queue_head_init(&vb->captured_packets);
+ 	res = register_netdev(netdev);
+--- dahdi-linux-3.2.0/drivers/dahdi/wctc4xxp/base.c~	2022-12-17 18:53:16.000000000 +0100
++++ dahdi-linux-3.2.0/drivers/dahdi/wctc4xxp/base.c	2022-12-17 18:56:24.751889607 +0100
+@@ -658,7 +658,11 @@
+ 	netdev->promiscuity = 0;
+ 	netdev->flags |= IFF_NOARP;
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0)
+ 	netif_napi_add(netdev, &wc->napi, &wctc4xxp_poll, 64);
++#else
++	netif_napi_add(netdev, &wc->napi, &wctc4xxp_poll);
++#endif
+ 
+ 	res = register_netdev(netdev);
+ 	if (res) {
