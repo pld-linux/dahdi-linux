@@ -17,7 +17,7 @@
 %bcond_without	userspace	# don't build userspace packages
 %bcond_with	verbose
 
-%ifarch alpha
+%ifarch alpha %{ix86}
 %undefine	with_xpp
 %endif
 
