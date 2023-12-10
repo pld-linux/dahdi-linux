@@ -3,10 +3,10 @@
 # - IMPORTANT rename: http://www.asterisk.org/zaptel-to-dahdi
 #
 # Conditional build:
-%bcond_without  kernel		# don't build kernel modules
-%bcond_with	oslec		# with Open Source Line Echo Canceller
-%bcond_without	xpp		# without Astribank
-%bcond_without	userspace	# don't build userspace packages
+%bcond_without	kernel		# kernel modules
+%bcond_with	oslec		# Open Source Line Echo Canceller
+%bcond_without	xpp		# Xorcom Astribank support
+%bcond_without	userspace	# userspace packages
 %bcond_with	verbose
 
 %ifarch alpha %{ix86}
@@ -31,12 +31,12 @@ exit 1
 Summary:	DAHDI telephony device support
 Summary(pl.UTF-8):	Obsługa urządzeń telefonicznych DAHDI
 Name:		%{pname}%{?_pld_builder:%{?with_kernel:-kernel}}%{_alt_kernel}
-Version:	3.2.0
+Version:	3.3.0
 Release:	%{rel}%{?_pld_builder:%{?with_kernel:@%{_kernel_ver_str}}}
 License:	GPL v2
 Group:		Base/Kernel
 Source0:	http://downloads.asterisk.org/pub/telephony/dahdi-linux/releases/dahdi-linux-%{version}.tar.gz
-# Source0-md5:	f93e28f544e914abdc927a6287ff5091
+# Source0-md5:	650e2f9ccae7efb850ce1914c768af83
 Source3:	%{FIRMWARE_URL}/dahdi-fw-oct6114-064-1.05.01.tar.gz
 # Source3-md5:	88db9b7a07d8392736171b1b3e6bcc66
 Source4:	%{FIRMWARE_URL}/dahdi-fw-oct6114-128-1.05.01.tar.gz
@@ -47,9 +47,6 @@ Source6:	%{FIRMWARE_URL}/dahdi-fw-tc400m-MR6.12.tar.gz
 # Source6-md5:	2ea860bb8a9d8ede2858b9557b74ee3c
 Source7:	%{FIRMWARE_URL}/dahdi-fw-hx8-2.06.tar.gz
 # Source7-md5:	a7f3886942bb3e9fed349a41b3390c9f
-Patch0:		kernel-4.14.patch
-Patch1:		kernel-5.18.patch
-Patch2:		kernel-6.1.patch
 Patch3:		no-xpp.patch
 URL:		http://www.asterisk.org/
 %{?with_kernel:%{expand:%buildrequires_kernel kernel%%{_alt_kernel}-module-build >= 3:2.6.20.2}}
@@ -148,9 +145,6 @@ cd ../..\
 
 %prep
 %setup -q -n %{pname}-%{version}
-%patch0 -p1
-%patch1 -p1
-%patch2 -p1
 %if %{without xpp}
 %patch3 -p1
 %endif
