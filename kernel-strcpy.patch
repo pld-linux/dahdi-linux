@@ -1,0 +1,209 @@
+diff -ru dahdi-linux-3.3.0/drivers/dahdi/dahdi-base.c dahdi-linux-3.3.0.strscpy/drivers/dahdi/dahdi-base.c
+--- dahdi-linux-3.3.0/drivers/dahdi/dahdi-base.c	2023-12-07 07:27:31.000000000 +0100
++++ dahdi-linux-3.3.0.strscpy/drivers/dahdi/dahdi-base.c	2024-03-17 00:07:17.036053433 +0100
+@@ -4354,7 +4354,7 @@
+ 	param.pulsebreaktime = chan->pulsebreaktime;
+ 	param.pulseaftertime = chan->pulseaftertime;
+ 	param.spanno = (chan->span) ? chan->span->spanno : 0;
+-	strlcpy(param.name, chan->name, sizeof(param.name));
++	strscpy(param.name, chan->name, sizeof(param.name));
+ 	param.chanpos = chan->chanpos;
+ 	param.sigcap = chan->sigcap;
+ 	/* Return current law */
+@@ -4442,8 +4442,8 @@
+ 
+ 	spaninfo.spanno = s->spanno; /* put the span # in here */
+ 	spaninfo.totalspans = span_count();
+-	strlcpy(spaninfo.desc, s->desc, sizeof(spaninfo.desc));
+-	strlcpy(spaninfo.name, s->name, sizeof(spaninfo.name));
++	strscpy(spaninfo.desc, s->desc, sizeof(spaninfo.desc));
++	strscpy(spaninfo.name, s->name, sizeof(spaninfo.name));
+ 	spaninfo.alarms = s->alarms;		/* get alarm status */
+ 	spaninfo.rxlevel = s->rxlevel;	/* get rx level */
+ 	spaninfo.txlevel = s->txlevel;	/* get tx level */
+@@ -4470,18 +4470,18 @@
+ 	spaninfo.lineconfig = s->lineconfig;
+ 	spaninfo.irq = 0;
+ 	spaninfo.linecompat = s->linecompat;
+-	strlcpy(spaninfo.lboname, dahdi_lboname(s->lbo),
++	strscpy(spaninfo.lboname, dahdi_lboname(s->lbo),
+ 			  sizeof(spaninfo.lboname));
+ 	if (s->parent->manufacturer) {
+-		strlcpy(spaninfo.manufacturer, s->parent->manufacturer,
++		strscpy(spaninfo.manufacturer, s->parent->manufacturer,
+ 			sizeof(spaninfo.manufacturer));
+ 	}
+ 	if (s->parent->devicetype) {
+-		strlcpy(spaninfo.devicetype, s->parent->devicetype,
++		strscpy(spaninfo.devicetype, s->parent->devicetype,
+ 			sizeof(spaninfo.devicetype));
+ 	}
+ 	if (s->parent->location) {
+-		strlcpy(spaninfo.location, s->parent->location,
++		strscpy(spaninfo.location, s->parent->location,
+ 			sizeof(spaninfo.location));
+ 	}
+ 	if (s->spantype) {
+@@ -4500,11 +4500,11 @@
+ 		const char *st = dahdi_spantype2str(s->spantype);
+ 		switch (s->spantype) {
+ 		case SPANTYPE_DIGITAL_BRI_NT:
+-			strlcpy(spaninfo.spantype, "NT",
++			strscpy(spaninfo.spantype, "NT",
+ 					sizeof(spaninfo.spantype));
+ 			break;
+ 		case SPANTYPE_DIGITAL_BRI_TE:
+-			strlcpy(spaninfo.spantype, "TE",
++			strscpy(spaninfo.spantype, "TE",
+ 					sizeof(spaninfo.spantype));
+ 			break;
+ 		default:
+@@ -4514,7 +4514,7 @@
+ 			 * so no backward compatibility for this
+ 			 * broken interface.
+ 			 */
+-			strlcpy(spaninfo.spantype, st,
++			strscpy(spaninfo.spantype, st,
+ 					sizeof(spaninfo.spantype));
+ 			break;
+ 		}
+@@ -4563,10 +4563,10 @@
+ 	spaninfo_v1.spanno = s->spanno; /* put the span # in here */
+ 	spaninfo_v1.totalspans = 0;
+ 	spaninfo_v1.totalspans = span_count();
+-	strlcpy(spaninfo_v1.desc,
++	strscpy(spaninfo_v1.desc,
+ 			  s->desc,
+ 			  sizeof(spaninfo_v1.desc));
+-	strlcpy(spaninfo_v1.name,
++	strscpy(spaninfo_v1.name,
+ 			  s->name,
+ 			  sizeof(spaninfo_v1.name));
+ 	spaninfo_v1.alarms = s->alarms;
+@@ -4588,25 +4588,25 @@
+ 	spaninfo_v1.lineconfig = s->lineconfig;
+ 	spaninfo_v1.irq = 0;
+ 	spaninfo_v1.linecompat = s->linecompat;
+-	strlcpy(spaninfo_v1.lboname,
++	strscpy(spaninfo_v1.lboname,
+ 			  dahdi_lboname(s->lbo),
+ 			  sizeof(spaninfo_v1.lboname));
+ 
+ 	if (s->parent->manufacturer) {
+-		strlcpy(spaninfo_v1.manufacturer, s->parent->manufacturer,
++		strscpy(spaninfo_v1.manufacturer, s->parent->manufacturer,
+ 			sizeof(spaninfo_v1.manufacturer));
+ 	}
+ 
+ 	if (s->parent->devicetype) {
+-		strlcpy(spaninfo_v1.devicetype, s->parent->devicetype,
++		strscpy(spaninfo_v1.devicetype, s->parent->devicetype,
+ 			sizeof(spaninfo_v1.devicetype));
+ 	}
+ 
+-	strlcpy(spaninfo_v1.location, s->parent->location,
++	strscpy(spaninfo_v1.location, s->parent->location,
+ 		sizeof(spaninfo_v1.location));
+ 
+ 	if (s->spantype) {
+-		strlcpy(spaninfo_v1.spantype,
++		strscpy(spaninfo_v1.spantype,
+ 				  dahdi_spantype2str(s->spantype),
+ 				  sizeof(spaninfo_v1.spantype));
+ 	}
+@@ -5280,7 +5280,7 @@
+ 			 * always use it instead of any configured software
+ 			 * echocan. This matches the behavior in dahdi 2.4.1.2
+ 			 * and earlier releases. */
+-			strlcpy(ae.echocan, hwec_def_name, sizeof(ae.echocan));
++			strscpy(ae.echocan, hwec_def_name, sizeof(ae.echocan));
+ 
+ 		} else if (strcasecmp(ae.echocan, hwec_def_name) != 0) {
+ 			chan_dbg(GENERAL, chan,
+@@ -5379,7 +5379,7 @@
+ 	bool have_hwec = dahdi_any_hwec_available();
+ 
+ 	memset(&vi, 0, sizeof(vi));
+-	strlcpy(vi.version, dahdi_version, sizeof(vi.version));
++	strscpy(vi.version, dahdi_version, sizeof(vi.version));
+ 	spin_lock(&ecfactory_list_lock);
+ 	list_for_each_entry(cur, &ecfactory_list, list) {
+ 		const char * const ec_name = cur->ec->get_name(NULL);
+@@ -5635,7 +5635,7 @@
+ 			rv = -EBUSY;
+ 			break;
+ 		}
+-		strlcpy(chan->txdialbuf + strlen(chan->txdialbuf), tdo->dialstr,
++		strscpy(chan->txdialbuf + strlen(chan->txdialbuf), tdo->dialstr,
+ 			DAHDI_MAX_DTMF_BUF - strlen(chan->txdialbuf));
+ 		if (!chan->dialing) {
+ 			chan->dialing = 1;
+Only in dahdi-linux-3.3.0.strscpy/drivers/dahdi: .dahdi-base.o.d
+diff -ru dahdi-linux-3.3.0/drivers/dahdi/dahdi_dynamic.c dahdi-linux-3.3.0.strscpy/drivers/dahdi/dahdi_dynamic.c
+--- dahdi-linux-3.3.0/drivers/dahdi/dahdi_dynamic.c	2023-12-07 07:27:31.000000000 +0100
++++ dahdi-linux-3.3.0.strscpy/drivers/dahdi/dahdi_dynamic.c	2024-03-17 00:07:17.032720014 +0100
+@@ -622,8 +622,8 @@
+ 	}
+ 	
+ 	/* Setup parameters properly assuming we're going to be okay. */
+-	strlcpy(d->dname, dds->driver, sizeof(d->dname));
+-	strlcpy(d->addr, dds->addr, sizeof(d->addr));
++	strscpy(d->dname, dds->driver, sizeof(d->dname));
++	strscpy(d->addr, dds->addr, sizeof(d->addr));
+ 	d->timing = dds->timing;
+ 	snprintf(d->span.name, sizeof(d->span.name), "DYN/%s/%s",
+ 		 dds->driver, dds->addr);
+diff -ru dahdi-linux-3.3.0/drivers/dahdi/dahdi_dynamic_eth.c dahdi-linux-3.3.0.strscpy/drivers/dahdi/dahdi_dynamic_eth.c
+--- dahdi-linux-3.3.0/drivers/dahdi/dahdi_dynamic_eth.c	2023-12-07 07:27:31.000000000 +0100
++++ dahdi-linux-3.3.0.strscpy/drivers/dahdi/dahdi_dynamic_eth.c	2024-03-17 00:07:17.032720014 +0100
+@@ -292,12 +292,12 @@
+ 		memset(z, 0, sizeof(struct ztdeth));
+ 
+ 		/* Address should be <dev>/<macaddr>[/subaddr] */
+-		strlcpy(tmp, addr, sizeof(tmp));
++		strscpy(tmp, addr, sizeof(tmp));
+ 		tmp2 = strchr(tmp, '/');
+ 		if (tmp2) {
+ 			*tmp2 = '\0';
+ 			tmp2++;
+-			strlcpy(z->ethdev, tmp, sizeof(z->ethdev));
++			strscpy(z->ethdev, tmp, sizeof(z->ethdev));
+ 		} else {
+ 			printk(KERN_NOTICE "Invalid TDMoE address (no device) '%s'\n", addr);
+ 			kfree(z);
+diff -ru dahdi-linux-3.3.0/drivers/dahdi/dahdi_dynamic_ethmf.c dahdi-linux-3.3.0.strscpy/drivers/dahdi/dahdi_dynamic_ethmf.c
+--- dahdi-linux-3.3.0/drivers/dahdi/dahdi_dynamic_ethmf.c	2023-12-07 07:27:31.000000000 +0100
++++ dahdi-linux-3.3.0.strscpy/drivers/dahdi/dahdi_dynamic_ethmf.c	2024-03-17 00:07:17.036053433 +0100
+@@ -573,7 +573,7 @@
+ 	z->rcvbuf = kmalloc(bufsize, GFP_KERNEL);
+ 
+ 	/* Address should be <dev>/<macaddr>/subaddr */
+-	strlcpy(src, addr, sizeof(src));
++	strscpy(src, addr, sizeof(src));
+ 	/* replace all / with space; otherwise kernel sscanf does not work */
+ 	src_ptr = src;
+ 	while (*src_ptr) {
+diff -ru dahdi-linux-3.3.0/drivers/dahdi/dahdi_transcode.c dahdi-linux-3.3.0.strscpy/drivers/dahdi/dahdi_transcode.c
+--- dahdi-linux-3.3.0/drivers/dahdi/dahdi_transcode.c	2023-12-07 07:27:31.000000000 +0100
++++ dahdi-linux-3.3.0.strscpy/drivers/dahdi/dahdi_transcode.c	2024-03-17 00:07:17.036053433 +0100
+@@ -329,7 +329,7 @@
+ 		return -ENOSYS;
+ 	}
+ 
+-	strlcpy(info.name, tc->name, sizeof(info.name));
++	strscpy(info.name, tc->name, sizeof(info.name));
+ 	info.numchannels = tc->numchannels;
+ 	info.srcfmts = tc->srcfmts;
+ 	info.dstfmts = tc->dstfmts;
+diff -ru dahdi-linux-3.3.0/drivers/dahdi/xpp/card_global.c dahdi-linux-3.3.0.strscpy/drivers/dahdi/xpp/card_global.c
+--- dahdi-linux-3.3.0/drivers/dahdi/xpp/card_global.c	2023-12-07 07:27:31.000000000 +0100
++++ dahdi-linux-3.3.0.strscpy/drivers/dahdi/xpp/card_global.c	2024-03-17 00:07:17.036053433 +0100
+@@ -342,7 +342,7 @@
+ 		XBUS_DBG(GENERAL, xbus, "Dropped packet. Disconnected.\n");
+ 		return -EBUSY;
+ 	}
+-	strlcpy(buf, cmdline, MAX_PROC_WRITE);	/* Save a copy */
++	strscpy(buf, cmdline, MAX_PROC_WRITE);	/* Save a copy */
+ 	if (buf[0] == '#' || buf[0] == ';')
+ 		XPD_DBG(REGS, xpd, "Note: '%s'\n", buf);
+ 	if ((p = strchr(buf, '#')) != NULL)	/* Truncate comments */
