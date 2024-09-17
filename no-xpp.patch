@@ -9,10 +9,10 @@
  	---help---
  	  Infrastructure support for Xorcom Astribank products.
  
---- dahdi-linux-3.2.0/drivers/dahdi/Kbuild~	2022-09-22 14:23:24.000000000 +0200
-+++ dahdi-linux-3.2.0/drivers/dahdi/Kbuild	2022-12-17 20:38:05.611879322 +0100
-@@ -41,8 +41,6 @@
- 
+--- dahdi-linux-3.4.0/drivers/dahdi/Kbuild.orig	2024-09-17 18:03:39.462660787 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/Kbuild	2024-09-17 18:09:48.820659803 +0200
+@@ -55,8 +55,6 @@ obj-$(DAHDI_BUILD_ALL)$(CONFIG_DAHDI_WCT
+ obj-$(DAHDI_BUILD_ALL)$(CONFIG_DAHDI_WCFXO)		+= wcfxo.o
  endif
  
 -obj-$(DAHDI_BUILD_ALL)$(CONFIG_DAHDI_XPP)		+= xpp/
@@ -20,11 +20,14 @@
  obj-$(DAHDI_BUILD_ALL)$(CONFIG_DAHDI_ECHOCAN_JPAH)	+= dahdi_echocan_jpah.o
  obj-$(DAHDI_BUILD_ALL)$(CONFIG_DAHDI_ECHOCAN_STEVE)	+= dahdi_echocan_sec.o
  obj-$(DAHDI_BUILD_ALL)$(CONFIG_DAHDI_ECHOCAN_STEVE2)	+= dahdi_echocan_sec2.o
---- dahdi-linux-3.2.0/drivers/dahdi/Kconfig~	2022-09-22 14:23:24.000000000 +0200
-+++ dahdi-linux-3.2.0/drivers/dahdi/Kconfig	2022-12-17 20:38:16.388535301 +0100
-@@ -222,5 +222,3 @@
+--- dahdi-linux-3.4.0/drivers/dahdi/Kconfig.orig	2024-09-17 18:03:39.465994102 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/Kconfig	2024-09-17 18:10:02.197254003 +0200
+@@ -282,8 +282,6 @@ config DAHDI_WCTE11XP
  
  	  If unsure, say Y.
  
--
 -source "drivers/dahdi/xpp/Kconfig"
+-
+ config DAHDI_OPVXA1200
+ 	tristate "OpenVox 8/12 ports analog card Support"
+ 	depends on DAHDI && PCI
