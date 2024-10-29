@@ -1,0 +1,54 @@
+--- dahdi-linux-3.4.0/drivers/dahdi/dahdi-sysfs.c~	2024-04-17 09:01:20.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/dahdi-sysfs.c	2024-10-29 23:33:14.316364556 +0100
+@@ -42,7 +42,11 @@
+ MODULE_PARM_DESC(tools_rootdir,
+ 		"root directory of all tools paths (default /)");
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 11, 0)
+ static int span_match(struct device *dev, struct device_driver *driver)
++#else
++static int span_match(struct device *dev, const struct device_driver *driver)
++#endif
+ {
+ 	return 1;
+ }
+--- dahdi-linux-3.4.0/drivers/dahdi/dahdi-sysfs-chan.c~	2024-04-17 09:01:20.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/dahdi-sysfs-chan.c	2024-10-29 23:34:49.287998458 +0100
+@@ -220,7 +220,11 @@
+ 	chan_dbg(DEVICES, chan, "SYSFS\n");
+ }
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 11, 0)
+ static int chan_match(struct device *dev, struct device_driver *driver)
++#else
++static int chan_match(struct device *dev, const struct device_driver *driver)
++#endif
+ {
+ 	struct dahdi_chan *chan;
+ 
+--- dahdi-linux-3.4.0/drivers/dahdi/xpp/xbus-sysfs.c~	2024-04-17 09:01:21.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/xpp/xbus-sysfs.c	2024-10-29 23:37:24.788087673 +0100
+@@ -397,7 +397,11 @@
+ ATTRIBUTE_GROUPS(xbus_dev);
+ #endif
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 11, 0)
+ static int astribank_match(struct device *dev, struct device_driver *driver)
++#else
++static int astribank_match(struct device *dev, const struct device_driver *driver)
++#endif
+ {
+ 	DBG(DEVICES, "SYSFS MATCH: dev->bus_id = %s, driver->name = %s\n",
+ 	    dev_name(dev), driver->name);
+@@ -766,7 +770,11 @@
+ 	return len;
+ }
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 11, 0)
+ static int xpd_match(struct device *dev, struct device_driver *driver)
++#else
++static int xpd_match(struct device *dev, const struct device_driver *driver)
++#endif
+ {
+ 	struct xpd_driver *xpd_driver;
+ 	xpd_t *xpd;
