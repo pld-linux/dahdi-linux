@@ -25,7 +25,7 @@ exit 1
 # nothing to be placed to debuginfo package
 %define		_enable_debug_packages	0
 
-%define		rel	2
+%define		rel	3
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
@@ -146,9 +146,9 @@ cd ../..\
 
 %prep
 %setup -q -n %{pname}-%{version}
-%patch0 -p1
+%patch -P 0 -p1
 %if %{without xpp}
-%patch3 -p1
+%patch -P 3 -p1
 %endif
 
 for a in %{SOURCE3} %{SOURCE4} %{SOURCE5} %{SOURCE6} %{SOURCE7}; do
