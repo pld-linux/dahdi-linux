@@ -1,0 +1,462 @@
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/dahdi-base.c dahdi-linux-3.4.0/drivers/dahdi/dahdi-base.c
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/dahdi-base.c	2024-04-17 09:01:20.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/dahdi-base.c	2025-06-16 01:28:34.993332120 +0200
+@@ -10128,7 +10128,11 @@
+ static void coretimer_cleanup(void)
+ {
+ 	atomic_set(&core_timer.shutdown, 1);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++	timer_delete_sync(&core_timer.timer);
++#else
+ 	del_timer_sync(&core_timer.timer);
++#endif
+ }
+ 
+ #endif /* CONFIG_DAHDI_CORE_TIMER */
+@@ -10420,7 +10424,11 @@
+ 
+ static void __exit watchdog_cleanup(void)
+ {
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++	timer_delete(&watchdogtimer);
++#else
+ 	del_timer(&watchdogtimer);
++#endif
+ }
+ 
+ #endif
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/dahdi_dummy.c dahdi-linux-3.4.0/drivers/dahdi/dahdi_dummy.c
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/dahdi_dummy.c	2024-04-17 09:01:20.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/dahdi_dummy.c	2025-06-16 01:28:34.993332120 +0200
+@@ -258,8 +258,12 @@
+ 	hrtimer_cancel(&zaptimer);
+ #else
+ 	atomic_set(&shutdown, 1);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++	timer_delete_sync(&timer);
++#else
+ 	del_timer_sync(&timer);
+ #endif
++#endif
+ 	dahdi_unregister_device(ztd->ddev);
+ 	dahdi_free_device(ztd->ddev);
+ 	kfree(ztd);
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/dahdi_dynamic.c dahdi-linux-3.4.0/drivers/dahdi/dahdi_dynamic.c
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/dahdi_dynamic.c	2024-04-17 09:01:20.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/dahdi_dynamic.c	2025-06-16 01:28:34.993332120 +0200
+@@ -894,10 +894,17 @@
+ 	tasklet_disable(&dahdi_dynamic_flush_tlet);
+ 	tasklet_kill(&dahdi_dynamic_flush_tlet);
+ #endif
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++	timer_delete_sync(&alarmcheck);
++	/* Must call again in case it was running before and rescheduled
++	 * itself. */
++	timer_delete(&alarmcheck);
++#else
+ 	del_timer_sync(&alarmcheck);
+ 	/* Must call again in case it was running before and rescheduled
+ 	 * itself. */
+ 	del_timer(&alarmcheck);
++#endif
+ 	printk(KERN_INFO "DAHDI Dynamic Span support unloaded\n");
+ }
+ 
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/dahdi_dynamic_ethmf.c dahdi-linux-3.4.0/drivers/dahdi/dahdi_dynamic_ethmf.c
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/dahdi_dynamic_ethmf.c	2024-04-17 09:01:20.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/dahdi_dynamic_ethmf.c	2025-06-16 01:28:34.993332120 +0200
+@@ -779,7 +779,11 @@
+ static void __exit ztdethmf_exit(void)
+ {
+ 	atomic_set(&timer_deleted, 1);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++	timer_delete_sync(&timer);
++#else
+ 	del_timer_sync(&timer);
++#endif
+ 
+ 	dev_remove_pack(&ztdethmf_ptype);
+ 	unregister_netdevice_notifier(&ztdethmf_nblock);
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/datamods/hdlc_cisco.c dahdi-linux-3.4.0/drivers/dahdi/datamods/hdlc_cisco.c
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/datamods/hdlc_cisco.c	2024-04-17 09:01:20.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/datamods/hdlc_cisco.c	2025-06-16 01:28:34.993332120 +0200
+@@ -264,7 +264,11 @@
+ static void cisco_stop(struct net_device *dev)
+ {
+ 	hdlc_device *hdlc = dev_to_hdlc(dev);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++	timer_delete_sync(&hdlc->state.cisco.timer);
++#else
+ 	del_timer_sync(&hdlc->state.cisco.timer);
++#endif
+ #if 0
+ 	if (netif_carrier_ok(dev))
+ 		netif_carrier_off(dev);
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/datamods/hdlc_fr.c dahdi-linux-3.4.0/drivers/dahdi/datamods/hdlc_fr.c
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/datamods/hdlc_fr.c	2024-04-17 09:01:20.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/datamods/hdlc_fr.c	2025-06-16 01:28:34.993332120 +0200
+@@ -1013,7 +1013,11 @@
+ 	printk(KERN_DEBUG "fr_stop\n");
+ #endif
+ 	if (hdlc->state.fr.settings.lmi != LMI_NONE)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++		timer_delete_sync(&hdlc->state.fr.timer);
++#else
+ 		del_timer_sync(&hdlc->state.fr.timer);
++#endif
+ 	fr_set_link_state(0, dev);
+ }
+ 
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/datamods/syncppp.c dahdi-linux-3.4.0/drivers/dahdi/datamods/syncppp.c
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/datamods/syncppp.c	2024-04-17 09:01:20.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/datamods/syncppp.c	2025-06-16 01:28:34.993332120 +0200
+@@ -199,7 +199,11 @@
+ {
+ 	if (p->pp_flags & PP_TIMO) 
+ 	{
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++		timer_delete(&p->pp_timer);
++#else
+ 		del_timer(&p->pp_timer);
++#endif
+ 		p->pp_flags &= ~PP_TIMO; 
+ 	}
+ }
+@@ -1144,7 +1148,11 @@
+ 
+ 	/* Stop keepalive handler. */
+ 	if (! spppq)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++		timer_delete(&sppp_keepalive_timer);
++#else
+ 		del_timer(&sppp_keepalive_timer);
++#endif
+ 	sppp_clear_timeout (sp);
+ 	spin_unlock_irqrestore(&spppq_lock, flags);
+ }
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/Kbuild dahdi-linux-3.4.0/drivers/dahdi/Kbuild
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/Kbuild	2024-04-17 09:01:20.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/Kbuild	2025-06-16 01:29:01.406665459 +0200
+@@ -83,13 +83,13 @@
+ BAD_KERNELS_VERS := 22 34 34.0.1 34.0.2
+ BAD_KERNELS := $(foreach ver,$(BAD_KERNELS_VERS),2.6.9-$(ver).EL 2.6.9-$(ver).ELsmp)
+ ifneq (,$(filter $(KVERS),$(BAD_KERNELS)))
+-EXTRA_CFLAGS+=-Drw_lock_t=rwlock_t
++ccflags-y += -Drw_lock_t=rwlock_t
+ endif
+ 
+ # A number of Fedora 10 (9 also?) kernels backported hrtimer to 2.6.27
+ # as part of an ALSA backport. TODO: Any better way to detect that?
+ ifeq (1,$(shell fgrep -q ' hrtimer_set_expires' include/linux/hrtimer.h 2>/dev/null && echo 1))
+-EXTRA_CFLAGS+=-DHAVE_HRTIMER_ACCESSORS=1
++ccflags-y += -DHAVE_HRTIMER_ACCESSORS=1
+ endif
+ 
+ ifeq (1,$(shell fgrep -q 'wait_for_completion_timeout' include/linux/completion.h 2>/dev/null && echo 1))
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/oct612x/Kbuild dahdi-linux-3.4.0/drivers/dahdi/oct612x/Kbuild
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/oct612x/Kbuild	2024-04-17 09:01:20.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/oct612x/Kbuild	2025-06-16 01:29:01.406665459 +0200
+@@ -27,6 +27,6 @@
+ # TODO: ccflags was added in 2.6.24 in commit f77bf01425b11947eeb3b5b54. This
+ # should be changed to a conditional compilation based on the Kernel Version.
+ # ccflags-y := -I$(src)/.. -Wno-undef -I$(src)/include -I$(src)/octdeviceapi -I$(src)/octdeviceapi/oct6100api
+-EXTRA_CFLAGS = -I$(src)/.. -Wno-undef -I$(src)/include -I$(src)/octdeviceapi -I$(src)/octdeviceapi/oct6100api
++ccflags-y = -I$(src)/.. -Wno-undef -I$(src)/include -I$(src)/octdeviceapi -I$(src)/octdeviceapi/oct6100api
+ obj-$(DAHDI_BUILD_ALL)$(CONFIG_DAHDI_OCT612X) := oct612x.o
+ oct612x-objs := $(octapi_files)
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/oct612x/Makefile dahdi-linux-3.4.0/drivers/dahdi/oct612x/Makefile
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/oct612x/Makefile	2024-04-17 09:01:20.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/oct612x/Makefile	2025-06-16 01:29:01.406665459 +0200
+@@ -26,5 +26,5 @@
+ # TODO: ccflags was added in 2.6.24 in commit f77bf01425b11947eeb3b5b54. This
+ # should be changed to a conditional compilation based on the Kernel Version.
+ # ccflags-y := -I$(src)/.. -Wno-undef -I$(src)/include -I$(src)/octdeviceapi -I$(src)/octdeviceapi/oct6100api
+-EXTRA_CFLAGS = -I$(src)/.. -Wno-undef -I$(src)/include -I$(src)/octdeviceapi -I$(src)/octdeviceapi/oct6100api
++ccflags-y = -I$(src)/.. -Wno-undef -I$(src)/include -I$(src)/octdeviceapi -I$(src)/octdeviceapi/oct6100api
+ lib-y := $(octapi_files)
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/opvxa1200/Kbuild dahdi-linux-3.4.0/drivers/dahdi/opvxa1200/Kbuild
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/opvxa1200/Kbuild	2024-04-17 09:01:21.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/opvxa1200/Kbuild	2025-06-16 01:29:01.406665459 +0200
+@@ -1,6 +1,6 @@
+ obj-$(DAHDI_BUILD_ALL)$(CONFIG_DAHDI_OPVXA1200) += opvxa1200.o
+ 
+-EXTRA_CFLAGS += -I$(src)/.. -Wno-undef
++ccflags-y += -I$(src)/.. -Wno-undef
+ 
+ opvxa1200-objs := base.o
+ 
+@@ -10,10 +10,10 @@
+         DAHDI_SPAN_MODULE:=$(shell if grep -C 5 "struct dahdi_span {" $(DAHDI_KERNEL_H_PATH) | grep -q "struct module \*owner"; then echo "yes"; else echo "no"; fi)
+         DAHDI_SPAN_OPS:=$(shell if grep -q "struct dahdi_span_ops {" $(DAHDI_KERNEL_H_PATH); then echo "yes"; else echo "no"; fi)
+         ifeq ($(DAHDI_SPAN_MODULE),yes)
+-                EXTRA_CFLAGS+=-DDAHDI_SPAN_MODULE
++                ccflags-y+=-DDAHDI_SPAN_MODULE
+         else
+                 ifeq ($(DAHDI_SPAN_OPS),yes)
+-                        EXTRA_CFLAGS+=-DDAHDI_SPAN_OPS
++                        ccflags-y+=-DDAHDI_SPAN_OPS
+                 endif
+         endif
+ endif
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/voicebus/Kbuild dahdi-linux-3.4.0/drivers/dahdi/voicebus/Kbuild
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/voicebus/Kbuild	2024-04-17 09:01:21.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/voicebus/Kbuild	2025-06-16 01:29:01.406665459 +0200
+@@ -8,10 +8,10 @@
+ dahdi_voicebus-objs += $(FIRM_DIR)/dahdi-fw-vpmoct032.o
+ $(warning WARNING: You are compiling firmware into voicebus.ko which is not available under the terms of the GPL. It may be a violation of the GPL to distribute the resulting image since it combines both GPL and non-GPL work. You should consult a lawyer of your own before distributing such an image.)
+ else
+-  EXTRA_CFLAGS+=-DHOTPLUG_FIRMWARE
++  ccflags-y+=-DHOTPLUG_FIRMWARE
+ endif
+ 
+-EXTRA_CFLAGS += -I$(src)/.. -Wno-undef
++ccflags-y += -I$(src)/.. -Wno-undef
+ 
+ $(obj)/$(FIRM_DIR)/dahdi-fw-vpmoct032.o: $(obj)/voicebus.o
+ 	$(MAKE) -C $(obj)/$(FIRM_DIR) dahdi-fw-vpmoct032.o
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/voicebus/voicebus.c dahdi-linux-3.4.0/drivers/dahdi/voicebus/voicebus.c
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/voicebus/voicebus.c	2024-04-17 09:01:21.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/voicebus/voicebus.c	2025-06-16 01:28:34.993332120 +0200
+@@ -1155,8 +1155,12 @@
+ 	set_bit(VOICEBUS_STOPPED, &vb->flags);
+ 
+ #if defined(CONFIG_VOICEBUS_TIMER)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++	timer_delete_sync(&vb->timer);
++#else
+ 	del_timer_sync(&vb->timer);
+ #endif
++#endif
+ 	vb_disable_interrupts(vb);
+ 	up(&stop);
+ }
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/wcb4xxp/Kbuild dahdi-linux-3.4.0/drivers/dahdi/wcb4xxp/Kbuild
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/wcb4xxp/Kbuild	2024-04-17 09:01:21.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/wcb4xxp/Kbuild	2025-06-16 01:29:01.406665459 +0200
+@@ -1,6 +1,6 @@
+ obj-m += wcb4xxp.o
+ 
+-EXTRA_CFLAGS += -I$(src)/.. -Wno-undef
++ccflags-y += -I$(src)/.. -Wno-undef
+ 
+ wcb4xxp-objs := base.o
+ 
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/wct4xxp/Kbuild dahdi-linux-3.4.0/drivers/dahdi/wct4xxp/Kbuild
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/wct4xxp/Kbuild	2024-04-17 09:01:21.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/wct4xxp/Kbuild	2025-06-16 01:29:01.406665459 +0200
+@@ -2,16 +2,16 @@
+ 
+ FIRM_DIR	:= ../firmware
+ 
+-EXTRA_CFLAGS += -I$(src)/.. -I$(src)/../oct612x/ $(shell $(src)/../oct612x/octasic-helper cflags $(src)/../oct612x) -Wno-undef
++ccflags-y += -I$(src)/.. -I$(src)/../oct612x/ $(shell $(src)/../oct612x/octasic-helper cflags $(src)/../oct612x) -Wno-undef
+ 
+ # The OCT612X source files are from a vendor drop and we do not want to edit
+ # them to make this warning go away. Therefore, turn off the
+ # unused-but-set-variable warning for this driver.
+ 
+-EXTRA_CFLAGS += $(call cc-option, -Wno-unused-but-set-variable)
++ccflags-y += $(call cc-option, -Wno-unused-but-set-variable)
+ 
+ ifeq ($(HOTPLUG_FIRMWARE),yes)
+-  EXTRA_CFLAGS+=-DHOTPLUG_FIRMWARE
++  ccflags-y+=-DHOTPLUG_FIRMWARE
+ endif
+ 
+ wct4xxp-objs := base.o vpm450m.o
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/wctc4xxp/base.c dahdi-linux-3.4.0/drivers/dahdi/wctc4xxp/base.c
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/wctc4xxp/base.c	2024-04-17 09:01:21.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/wctc4xxp/base.c	2025-06-16 01:28:34.993332120 +0200
+@@ -4165,8 +4165,13 @@
+ 	wctc4xxp_remove_from_device_list(wc);
+ 
+ 	set_bit(DTE_SHUTDOWN, &wc->flags);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++	if (timer_delete_sync(&wc->watchdog))
++		timer_delete_sync(&wc->watchdog);
++#else
+ 	if (del_timer_sync(&wc->watchdog))
+ 		del_timer_sync(&wc->watchdog);
++#endif
+ 
+ 	/* This should already be stopped, but it doesn't hurt to make sure. */
+ 	clear_bit(DTE_POLLING, &wc->flags);
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/wctc4xxp/Kbuild dahdi-linux-3.4.0/drivers/dahdi/wctc4xxp/Kbuild
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/wctc4xxp/Kbuild	2024-04-17 09:01:21.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/wctc4xxp/Kbuild	2025-06-16 01:29:01.406665459 +0200
+@@ -2,10 +2,10 @@
+ 
+ FIRM_DIR	:= ../firmware
+ 
+-EXTRA_CFLAGS += -I$(src)/.. -Wno-undef
++ccflags-y += -I$(src)/.. -Wno-undef
+ 
+ ifeq ($(HOTPLUG_FIRMWARE),yes)
+-  EXTRA_CFLAGS+=-DHOTPLUG_FIRMWARE
++  ccflags-y+=-DHOTPLUG_FIRMWARE
+ endif
+ 
+ wctc4xxp-objs := base.o
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/wctdm24xxp/Kbuild dahdi-linux-3.4.0/drivers/dahdi/wctdm24xxp/Kbuild
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/wctdm24xxp/Kbuild	2024-04-17 09:01:21.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/wctdm24xxp/Kbuild	2025-06-16 01:29:01.406665459 +0200
+@@ -1,5 +1,5 @@
+ obj-$(DAHDI_BUILD_ALL)$(CONFIG_DAHDI_WCTDM24XXP) += wctdm24xxp.o
+ 
+-EXTRA_CFLAGS += -I$(src)/.. -Wno-undef
++ccflags-y += -I$(src)/.. -Wno-undef
+ 
+ wctdm24xxp-objs := base.o xhfc.o
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/wcte12xp/base.c dahdi-linux-3.4.0/drivers/dahdi/wcte12xp/base.c
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/wcte12xp/base.c	2024-04-17 09:01:21.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/wcte12xp/base.c	2025-06-16 01:28:34.996665453 +0200
+@@ -2127,7 +2127,11 @@
+ 	clear_bit(INITIALIZED, &wc->bit_flags);
+ 	synchronize_irq(wc->vb.pdev->irq);
+ 	smp_mb__after_atomic();
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++	timer_delete_sync(&wc->timer);
++#else
+ 	del_timer_sync(&wc->timer);
++#endif
+ 	flush_workqueue(wc->wq);
+ 
+ 	t1_reset_registers(wc);
+@@ -3095,7 +3099,11 @@
+ 	clear_bit(INITIALIZED, &wc->bit_flags);
+ 	smp_mb__after_atomic();
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++	timer_delete_sync(&wc->timer);
++#else
+ 	del_timer_sync(&wc->timer);
++#endif
+ 	flush_workqueue(wc->wq);
+ #ifdef VPM_SUPPORT
+ 	if (vpmadt) {
+@@ -3106,7 +3114,11 @@
+ 			schedule();
+ 	}
+ #endif
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++	timer_delete_sync(&wc->timer);
++#else
+ 	del_timer_sync(&wc->timer);
++#endif
+ 
+ 	voicebus_release(&wc->vb);
+ 
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/wcte12xp/Kbuild dahdi-linux-3.4.0/drivers/dahdi/wcte12xp/Kbuild
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/wcte12xp/Kbuild	2024-04-17 09:01:21.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/wcte12xp/Kbuild	2025-06-16 01:29:01.406665459 +0200
+@@ -1,5 +1,5 @@
+ obj-$(DAHDI_BUILD_ALL)$(CONFIG_DAHDI_WCTE12XP) += wcte12xp.o
+ 
+-EXTRA_CFLAGS += -I$(src)/.. -Wno-undef
++ccflags-y += -I$(src)/.. -Wno-undef
+ 
+ wcte12xp-objs := base.o
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/wcte13xp-base.c dahdi-linux-3.4.0/drivers/dahdi/wcte13xp-base.c
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/wcte13xp-base.c	2024-04-17 09:01:21.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/wcte13xp-base.c	2025-06-16 01:28:34.996665453 +0200
+@@ -1861,7 +1861,11 @@
+ 	disable_irq(wc->xb.pdev->irq);
+ 
+ 	smp_mb__after_atomic();
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++	timer_delete_sync(&wc->timer);
++#else
+ 	del_timer_sync(&wc->timer);
++#endif
+ 	flush_workqueue(wc->wq);
+ 
+ 	t13x_framer_reset(wc);
+@@ -2736,9 +2740,17 @@
+ 	/* Leave framer in reset so it no longer transmits */
+ 	wcxb_gpio_clear(&wc->xb, FALC_CPU_RESET);
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++	timer_delete_sync(&wc->timer);
++#else
+ 	del_timer_sync(&wc->timer);
++#endif
+ 	flush_workqueue(wc->wq);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++	timer_delete_sync(&wc->timer);
++#else
+ 	del_timer_sync(&wc->timer);
++#endif
+ 
+ 	/* Turn off status LED */
+ 	t13x_setleds(wc, 0);
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/wcte43x-base.c dahdi-linux-3.4.0/drivers/dahdi/wcte43x-base.c
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/wcte43x-base.c	2024-04-17 09:01:21.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/wcte43x-base.c	2025-06-16 01:28:34.996665453 +0200
+@@ -3567,9 +3567,17 @@
+ 
+ 	cancel_delayed_work_sync(&wc->clksrc_work.work);
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++	timer_delete_sync(&wc->timer);
++#else
+ 	del_timer_sync(&wc->timer);
++#endif
+ 	flush_workqueue(wc->wq);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++	timer_delete_sync(&wc->timer);
++#else
+ 	del_timer_sync(&wc->timer);
++#endif
+ 
+ 	dahdi_unregister_device(wc->ddev);
+ 
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/xpp/Kbuild dahdi-linux-3.4.0/drivers/dahdi/xpp/Kbuild
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/xpp/Kbuild	2024-04-17 09:01:21.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/xpp/Kbuild	2025-06-16 01:29:01.406665459 +0200
+@@ -1,4 +1,4 @@
+-EXTRA_CFLAGS	=	$(XPP_LOCAL_CFLAGS)	\
++ccflags-y	=	$(XPP_LOCAL_CFLAGS)	\
+ 			-DDEBUG			\
+ 			-DPOLL_DIGITAL_INPUTS	\
+ 			-DDEBUG_PCMTX		\
+@@ -32,7 +32,7 @@
+ xpp_mmap-objs		+= mmapbus.o mmapdrv.o
+ 
+ ifeq	(y,$(PARPORT_DEBUG))
+-EXTRA_CFLAGS	+= -DDEBUG_SYNC_PARPORT
++ccflags-y	+= -DDEBUG_SYNC_PARPORT
+ obj-m		+= parport_debug.o
+ endif
+ 
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/xpp/xbus-core.c dahdi-linux-3.4.0/drivers/dahdi/xpp/xbus-core.c
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/xpp/xbus-core.c	2024-04-17 09:01:21.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/xpp/xbus-core.c	2025-06-16 01:28:34.996665453 +0200
+@@ -1517,7 +1517,11 @@
+ 	xframe_queue_clear(&xbus->send_pool);
+ 	xframe_queue_clear(&xbus->receive_pool);
+ 	xframe_queue_clear(&xbus->pcm_tospan);
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++	timer_delete_sync(&xbus->command_timer);
++#else
+ 	del_timer_sync(&xbus->command_timer);
++#endif
+ 	transportops_put(xbus);
+ 	transport_destroy(xbus);
+ 	/* worker_reset(xbus) was called in xbus_deactivate(xbus) */
+diff -ur dahdi-linux-3.4.0.orig/drivers/dahdi/xpp/xbus-pcm.c dahdi-linux-3.4.0/drivers/dahdi/xpp/xbus-pcm.c
+--- dahdi-linux-3.4.0.orig/drivers/dahdi/xpp/xbus-pcm.c	2024-04-17 09:01:21.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/xpp/xbus-pcm.c	2025-06-16 01:28:34.996665453 +0200
+@@ -371,8 +371,13 @@
+ 			mod_timer(&xbus->command_timer, jiffies + 1);
+ 		}
+ 	} else if (timer_pending(&xbus->command_timer)) {
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 15, 0)
++		XBUS_DBG(SYNC, xbus, "timer_delete\n");
++		timer_delete(&xbus->command_timer);
++#else
+ 		XBUS_DBG(SYNC, xbus, "del_timer\n");
+ 		del_timer(&xbus->command_timer);
++#endif
+ 	}
+ 	xbus->self_ticking = !on;
+ }
