@@ -1,0 +1,70 @@
+--- dahdi-linux-3.4.0/drivers/dahdi/wcte13xp-base.c~	2025-09-13 01:45:44.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/wcte13xp-base.c	2025-09-13 01:49:43.956661576 +0200
+@@ -2393,7 +2393,11 @@
+ 
+ static void te13xp_timer(TIMER_DATA_TYPE timer)
+ {
++#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 16, 0)
+ 	struct t13x *wc = from_timer(wc, timer, timer);
++#else
++	struct t13x *wc = timer_container_of(wc, timer, timer);
++#endif
+ 
+ 	if (unlikely(!test_bit(INITIALIZED, &wc->bit_flags)))
+ 		return;
+--- dahdi-linux-3.4.0/drivers/dahdi/wcte43x-base.c~	2025-09-13 01:50:30.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/wcte43x-base.c	2025-09-13 01:51:41.859994901 +0200
+@@ -3178,7 +3178,11 @@
+ 
+ static void t43x_timer(TIMER_DATA_TYPE timer)
+ {
++#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 16, 0)
+ 	struct t43x *wc = from_timer(wc, timer, timer);
++#else
++	struct t43x *wc = timer_container_of(wc, timer, timer);
++#endif
+ 
+ 	if (!is_initialized(wc))
+ 		return;
+--- dahdi-linux-3.4.0/drivers/dahdi/wcte12xp/base.c~	2025-09-13 01:52:00.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/wcte12xp/base.c	2025-09-13 01:53:01.189994894 +0200
+@@ -2784,7 +2784,11 @@
+ static void te12xp_timer(TIMER_DATA_TYPE timer)
+ {
+ 	unsigned long flags;
++#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 16, 0)
+ 	struct t1 *wc = from_timer(wc, timer, timer);
++#else
++	struct t1 *wc = timer_container_of(wc, timer, timer);
++#endif
+ 
+ 	if (unlikely(!test_bit(INITIALIZED, &wc->bit_flags)))
+ 		return;
+--- dahdi-linux-3.4.0/drivers/dahdi/wctc4xxp/base.c~	2025-09-13 01:53:19.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/wctc4xxp/base.c	2025-09-13 01:54:30.406661560 +0200
+@@ -3654,7 +3654,11 @@
+ static void
+ wctc4xxp_watchdog(TIMER_DATA_TYPE timer)
+ {
++#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 16, 0)
+ 	struct wcdte *wc = from_timer(wc, timer, watchdog);
++#else
++	struct wcdte *wc = timer_container_of(wc, timer, watchdog);
++#endif
+ 	struct tcb *cmd, *temp;
+ 	LIST_HEAD(cmds_to_retry);
+ 	const int MAX_RETRIES = 5;
+--- dahdi-linux-3.4.0/drivers/dahdi/xpp/xbus-pcm.c~	2025-09-13 01:54:49.000000000 +0200
++++ dahdi-linux-3.4.0/drivers/dahdi/xpp/xbus-pcm.c	2025-09-13 01:55:44.136661558 +0200
+@@ -352,7 +352,11 @@
+ 
+ static void xbus_command_timer(TIMER_DATA_TYPE timer)
+ {
++#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 16, 0)
+ 	xbus_t *xbus = from_timer(xbus, timer, command_timer);
++#else
++	xbus_t *xbus = timer_container_of(xbus, timer, command_timer);
++#endif
+ 
+ 	BUG_ON(!xbus);
+ 	xbus_command_queue_tick(xbus);
