@@ -25,7 +25,7 @@ exit 1
 # nothing to be placed to debuginfo package
 %define		_enable_debug_packages	0
 
-%define		rel	5
+%define		rel	6
 %define		pname	dahdi-linux
 %define		FIRMWARE_URL http://downloads.digium.com/pub/telephony/firmware/releases
 Summary:	DAHDI telephony device support
@@ -92,7 +92,7 @@ Header files for dahdi interface.
 %description devel -l pl.UTF-8
 Pliki nagłówkowe interfejsu dahdi.
 
-%define	kernel_pkg()\
+%define	kernel_pkg() \
 %package -n kernel%{_alt_kernel}-%{pname}\
 Summary:	DAHDI Linux kernel driver\
 Summary(pl.UTF-8):	Sterownik DAHDI dla jądra Linuksa\
@@ -135,7 +135,7 @@ Sterownik dla jądra Linuksa do urządzeń telefonicznych DAHDI.\
 %depmod %{_kernel_ver}\
 %{nil}
 
-%define build_kernel_pkg()\
+%define build_kernel_pkg() \
 %if %{with kernel}\
 %build_kernel_modules V=1 SUBDIRS=$PWD/drivers/dahdi DAHDI_BUILD_ALL=m HOTPLUG_FIRMWARE=yes DAHDI_MODULES_EXTRA=" " -m %{modules_in} KSRC=$PWD/o -C drivers/dahdi DAHDI_INCLUDE=$PWD/../../include\
 cd drivers/dahdi\
